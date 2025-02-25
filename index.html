@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Álbuns - Projeto Fotógrafo</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>Álbuns de Fotos</h1>
+
+    <button id="updateAlbumsBtn">🔄 Atualizar Álbuns</button>
+    <div id="album-container"></div>
+
+    <!-- Scripts no final do body para garantir que o DOM está carregado -->
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            loadAlbums(); // 🚀 Agora é chamado apenas uma vez
+
+            // Adiciona evento ao botão apenas se ele existir
+            const updateButton = document.getElementById("updateAlbumsBtn");
+            if (updateButton) {
+                updateButton.addEventListener("click", loadAlbums);
+            }
+        });
+    </script>
+</body>
+</html>

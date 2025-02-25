@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galeria do Álbum</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>Galeria do Álbum</h1>
+
+    <!-- Botão para atualizar o álbum -->
+    <button id="updateAlbumBtn">🔄 Atualizar Álbum</button>
+
+    <input type="file" id="fileInput">
+    <button onclick="uploadSelfie()">Enviar e Comparar</button>
+
+    <div id="image-gallery"></div>
+
+    <!-- Scripts no final do body para evitar erros de carregamento -->
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const albumId = new URLSearchParams(window.location.search).get("album");
+
+            if (albumId) {
+                console.log("🚀 Página carregada dentro de um álbum, tentando atualizar...");
+                refreshAlbum(albumId);
+            }
+
+            // 🚀 Só adiciona o evento se o botão existir!
+            const updateButton = document.getElementById("updateAlbumBtn");
+            if (updateButton) {
+                updateButton.addEventListener("click", () => refreshAlbum(albumId));
+            }
+        });
+    </script>
+</body>
+</html>
