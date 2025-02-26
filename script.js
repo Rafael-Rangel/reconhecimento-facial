@@ -1,5 +1,6 @@
 //const API_URL = "https://cors-anywhere.herokuapp.com/http://3.12.76.155:8000/api";
-const API_URL = "http://3.12.76.155:8000/api";
+const API_URL = "https://3.12.76.155:8000/api";
+                
 // autorização 1hr: https://cors-anywhere.herokuapp.com/corsdemo
  
 let imageMap = {}; // Mapeamento ID -> Nome da imagem
