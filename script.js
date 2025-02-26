@@ -1,4 +1,4 @@
-const API_URL = "http://3.12.76.155:8000/api";
+const API_URL = "https://cors-anywhere.herokuapp.com/http://3.12.76.155:8000/api";
 let imageMap = {}; // Mapeamento ID -> Nome da imagem
 let isProcessing = false; // Evita chamadas duplicadas no álbum
 let isLoadingAlbums = false; // Evita múltiplas chamadas ao carregar álbuns
