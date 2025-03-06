@@ -7,7 +7,10 @@
   padding: 0;
   box-sizing: border-box;
 }
-
+.topo {
+    display: flex
+;
+}
 /* Variáveis de cores, fontes e transições */
 :root {
   --primary: #E01F34;
