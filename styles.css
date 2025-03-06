@@ -68,6 +68,17 @@ button#updateAlbumsBtn {
   background: #E01F34;
   color: #fff;
 }
+
+button#updateAlbumBtn {
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #fff;
+    font-family: 'Raleway';
+    font-weight: 400;
+    background: #E01F34;
+    color: #fff;
+}
+
 div#album-container {
   display:flex;
   flex-direction: row;
