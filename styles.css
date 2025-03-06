@@ -24,17 +24,16 @@
 
 /* Corpo com fundo animado e design responsivo */
 body {
-  font-family: var(--font);
-  background: linear-gradient(135deg, var(--primary), #6f2832);
-  background-size: 400% 400%;
-  animation: gradientBG 15s ease infinite;
-  color: var(--tertiary);
-  min-height: 100vh;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+    font-family: var(--font);
+    background: linear-gradient(330deg, #dddada -25%, #E01F34 48%);
+    animation: gradientBG 15s ease infinite;
+    color: var(--tertiary);
+    min-height: 100vh;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
 /* Animação do fundo */
