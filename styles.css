@@ -68,7 +68,10 @@ button#updateAlbumsBtn {
   background: #E01F34;
   color: #fff;
 }
-
+img.fade-in {
+    border-radius: 10px;
+    margin-right: 10px;
+}
 button {
     padding: 10px;
     border-radius: 5px;
