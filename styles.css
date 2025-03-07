@@ -376,7 +376,7 @@ div#album-container {
   color: var(--white);
   background: var(--primary);
   border: none;
-  border-radius: 50px;
+  border-radius: 5px;
   cursor: pointer;
   overflow: hidden;
   transition: background var(--transition);
