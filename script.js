@@ -64,13 +64,15 @@ async function refreshAlbum(albumId, forceUpdate = false) {
             return;
         }
 
-        const gallery = document.getElementById("image-gallery");
-        if (!gallery) {
-            console.warn("⚠️ Elemento #image-gallery não encontrado!");
-            return;
-        }
+       const gallery = document.getElementById("image-gallery");
+if (!gallery) {
+    console.warn("⚠️ Elemento #image-gallery não encontrado!");
+    return;
+}
+// Mostra o loader
+gallery.classList.add("loading");
+gallery.innerHTML = '<div class="loader"></div>';
 
-        gallery.classList.add("loading");
     
 
         // 🔥 Verifica primeiro se o álbum existe
@@ -287,10 +289,14 @@ async function loadAlbums() {
     isLoadingAlbums = true;
 
     const albumContainer = document.getElementById("album-container");
-    if (!albumContainer) {
-        console.warn("⚠️ Página sem #album-container, pulando carregamento de álbuns.");
-        return;
-    }
+if (!albumContainer) {
+    console.warn("⚠️ Página sem #album-container, pulando carregamento de álbuns.");
+    return;
+}
+// Mostra o loader
+albumContainer.classList.add("loading");
+albumContainer.innerHTML = '<div class="loader"></div>';
+
 
     try {
         console.log("📂 Buscando álbuns...");
@@ -327,6 +333,7 @@ async function loadAlbums() {
         albumContainer.innerHTML = "<p>Erro ao carregar os álbuns. Tente novamente mais tarde.</p>";
     } finally {
         isLoadingAlbums = false; // 🔥 Libera para futuras chamadas apenas quando terminar
+        albumContainer.classList.remove("loading");
     }
 }
 
