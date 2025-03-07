@@ -50,6 +50,17 @@ h2 {
   }
 }
 
+@media (max-width: 550px) {
+  .to {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .fancy-btn {
+    font-size: 90%;
+  }
+}
+
 
 #image-gallery {
   display: grid;
@@ -369,7 +380,7 @@ div#album-container {
   cursor: pointer;
   overflow: hidden;
   transition: background var(--transition);
-  font-size: 13px;
+  font-size: 80%;
   text-align: center;
 }
 .fancy-btn::after {
