@@ -94,8 +94,8 @@ h2 {
     margin-top: 10px;
 }
   .fancy-btn {
-    font-size: 90%;
-  }
+        font-size: 13px !important;
+    }
 }
 
 
