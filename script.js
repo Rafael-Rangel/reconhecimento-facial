@@ -16,9 +16,9 @@ async function checkAndLoadAlbum(albumId) {
     }
 
     try {
-        console.log(🚀 Verificando existência do álbum: ${albumId}...);
+        console.log(`🚀 Verificando existência do álbum: ${albumId}...`);
 
-        const response = await fetch(${API_URL}/albums/${albumId});
+        const response = await fetch(`${API_URL}/albums/${albumId}`);
 
         if (!response.ok) {
             console.warn(🚨 Álbum não encontrado! Código: ${response.status});
@@ -29,7 +29,7 @@ async function checkAndLoadAlbum(albumId) {
                 return;
             }
 
-            throw new Error(Erro ao verificar álbum (Status: ${response.status}));
+            throw new Error(`Erro ao verificar álbum (Status: ${response.status})`);
         }
 
         console.log("✅ Álbum encontrado! Carregando imagens...");
@@ -84,7 +84,7 @@ gallery.innerHTML = '<div class="loader"></div>';
             if (response.status === 404) {
                 isAlbumDeleted = true; // 🔥 Marca que o álbum foi excluído
 
-                gallery.innerHTML = <p style="color: red;">Este álbum foi excluído ou não existe.</p>;
+                gallery.innerHTML = `<p style="color: red;">Este álbum foi excluído ou não existe.</p>`;
                 
                 setTimeout(() => {
                     window.location.href = "index.html"; // 🔄 Redireciona para a página inicial
@@ -153,7 +153,7 @@ function displayImages(images) {
         imageMap[image.id] = image.name;
 
         const img = document.createElement("img");
-        img.src = https://drive.google.com/thumbnail?id=${image.id};
+        img.src = `https://drive.google.com/thumbnail?id=${image.id}`;
         img.alt = image.name;
         img.loading = "lazy";
         img.classList.add("fade-in");
