@@ -7,6 +7,16 @@
   padding: 0;
   box-sizing: border-box;
 }
+body {
+  overflow: auto;           /* Ativa a rolagem */
+  -ms-overflow-style: none; /* IE e Edge */
+  scrollbar-width: none;    /* Firefox */
+}
+
+body::-webkit-scrollbar {
+  display: none;            /* Chrome, Safari e Opera */
+}
+
 .topo {
     display: flex;
 }
