@@ -1,7 +1,7 @@
 //const API_URL = "https://cors-anywhere.herokuapp.com/http://3.12.76.155:8000/api";
 const API_URL = "https://projetofotografo.zapto.org/api";
 // autorização 1hr: https://cors-anywhere.herokuapp.com/corsdemo
-
+ 
 let imageMap = {}; // Mapeamento ID -> Nome da imagem
 let isProcessing = false; // Evita chamadas duplicadas no álbum
 let isLoadingAlbums = false; // Evita múltiplas chamadas ao carregar álbuns
@@ -16,12 +16,12 @@ async function checkAndLoadAlbum(albumId) {
     }
 
     try {
-        console.log(`🚀 Verificando existência do álbum: ${albumId}...`);
+        console.log(🚀 Verificando existência do álbum: ${albumId}...);
 
-        const response = await fetch(`${API_URL}/albums/${albumId}`);
+        const response = await fetch(${API_URL}/albums/${albumId});
 
         if (!response.ok) {
-            console.warn(`🚨 Álbum não encontrado! Código: ${response.status}`);
+            console.warn(🚨 Álbum não encontrado! Código: ${response.status});
 
             if (response.status === 404) {
                 alert("Este álbum não existe ou foi excluído!");
@@ -29,7 +29,7 @@ async function checkAndLoadAlbum(albumId) {
                 return;
             }
 
-            throw new Error(`Erro ao verificar álbum (Status: ${response.status})`);
+            throw new Error(Erro ao verificar álbum (Status: ${response.status}));
         }
 
         console.log("✅ Álbum encontrado! Carregando imagens...");
@@ -43,7 +43,7 @@ async function checkAndLoadAlbum(albumId) {
 }
 
 // 🔄 Atualiza e carrega imagens corretamente, com VERIFICAÇÃO SE O ÁLBUM EXISTE
-let isAlbumDeleted = false; // Flag para evitar loop infinito
+let isAlbumDeleted = false; // 🔥 Flag para evitar loop infinito
 
 async function refreshAlbum(albumId, forceUpdate = false) {
     if (isProcessing && !forceUpdate) {
@@ -64,35 +64,36 @@ async function refreshAlbum(albumId, forceUpdate = false) {
             return;
         }
 
-        const gallery = document.getElementById("image-gallery");
-        if (!gallery) {
-            console.warn("⚠️ Elemento #image-gallery não encontrado!");
-            return;
-        }
+       const gallery = document.getElementById("image-gallery");
+if (!gallery) {
+    console.warn("⚠️ Elemento #image-gallery não encontrado!");
+    return;
+}
+// Mostra o loader
+gallery.classList.add("loading");
+gallery.innerHTML = '<div class="loader"></div>';
 
-        // Mostra o loader
-        gallery.classList.add("loading");
-        gallery.innerHTML = '<div class="loader"></div>';
+    
 
         // 🔥 Verifica primeiro se o álbum existe
-        let response = await fetch(`${API_URL}/albums/${albumId}/images`);
+        let response = await fetch(${API_URL}/albums/${albumId}/images);
         
         if (!response.ok) {
             console.warn("🚨 O álbum não existe ou foi excluído! Código:", response.status);
 
             if (response.status === 404) {
-                isAlbumDeleted = true; // Marca que o álbum foi excluído
+                isAlbumDeleted = true; // 🔥 Marca que o álbum foi excluído
 
-                gallery.innerHTML = "<p style=\"color: red;\">Este álbum foi excluído ou não existe.</p>";
+                gallery.innerHTML = <p style="color: red;">Este álbum foi excluído ou não existe.</p>;
                 
                 setTimeout(() => {
-                    window.location.href = "index.html"; // Redireciona para a página inicial
+                    window.location.href = "index.html"; // 🔄 Redireciona para a página inicial
                 }, 3000);
 
                 return;
             }
 
-            throw new Error(`Erro ao carregar álbum (Status: ${response.status})`);
+            throw new Error(Erro ao carregar álbum (Status: ${response.status}));
         }
 
         let data = await response.json();
@@ -105,17 +106,40 @@ async function refreshAlbum(albumId, forceUpdate = false) {
             gallery.innerHTML = "<p>Nenhuma imagem disponível.</p>";
         }
     } catch (error) {
-        console.error("🚨 Erro ao atualizar o álbum:", error);
-        const gallery = document.getElementById("image-gallery");
-        if (gallery) {
-            gallery.innerHTML = "<p>Erro ao carregar as imagens. Tente novamente mais tarde.</p>";
-        }
-    } finally {
-        isProcessing = false;
-        const gallery = document.getElementById("image-gallery");
-        if (gallery) gallery.classList.remove("loading");
+    console.error("🚨 Erro ao atualizar o álbum:", error);
+    const gallery = document.getElementById("image-gallery");
+    if (gallery) {
+        gallery.innerHTML = "<p>Erro ao carregar as imagens. Tente novamente mais tarde.</p>";
     }
+} finally {
+    isProcessing = false;
+    const gallery = document.getElementById("image-gallery");
+    if (gallery) gallery.classList.remove("loading");
 }
+
+
+
+// ✅ Inicia o carregamento ao abrir a página **COM VERIFICAÇÃO SE O ÁLBUM EXISTE**
+document.addEventListener("DOMContentLoaded", () => {
+    const albumId = new URLSearchParams(window.location.search).get("album");
+
+    if (!albumId) {
+        console.log("🖼️ Carregando lista de álbuns...");
+        loadAlbums();
+    } else {
+        console.log("🚀 Página carregada dentro de um álbum, verificando existência...");
+
+        if (!isProcessing) {
+            isProcessing = true; // ✅ Define antes de chamar
+         
+        } else {
+            console.warn("⚠️ Ignorando chamada duplicada de refreshAlbum.");
+        }
+    }
+});
+
+
+
 
 // 🖼️ Exibe imagens conforme forem carregando
 function displayImages(images) {
@@ -129,7 +153,7 @@ function displayImages(images) {
         imageMap[image.id] = image.name;
 
         const img = document.createElement("img");
-        img.src = `https://drive.google.com/thumbnail?id=${image.id}`;
+        img.src = https://drive.google.com/thumbnail?id=${image.id};
         img.alt = image.name;
         img.loading = "lazy";
         img.classList.add("fade-in");
@@ -143,63 +167,92 @@ function displayImages(images) {
 
 // 🔄 Envia selfie e busca rostos similares
 async function uploadSelfie() {
-    const fileInput = document.getElementById("fileInput");
-    const cameraInput = document.getElementById("cameraInput");
+  // Pega os inputs
+  const fileInput = document.getElementById("fileInput");
+  const cameraInput = document.getElementById("cameraInput");
   
-    let file = null;
+  let file = null;
   
-    // Verifica se o input da câmera tem arquivo
-    if (cameraInput && cameraInput.files && cameraInput.files.length > 0) {
-        file = cameraInput.files[0];
+  // Verifica se o input da câmera tem arquivo
+  if (cameraInput && cameraInput.files && cameraInput.files.length > 0) {
+    file = cameraInput.files[0];
+  }
+  // Se não, verifica o input do arquivo
+  else if (fileInput && fileInput.files && fileInput.files.length > 0) {
+    file = fileInput.files[0];
+  }
+  
+  if (!file) {
+    alert("Selecione uma imagem para enviar.");
+    return;
+  }
+  
+  const albumId = new URLSearchParams(window.location.search).get("album");
+  if (!albumId) {
+    console.error("⚠️ Nenhum albumId encontrado!");
+    return;
+  }
+  
+  try {
+    console.log("📤 Enviando selfie para comparação...");
+    const formData = new FormData();
+    formData.append("file", file);
+  
+    const response = await fetch(${API_URL}/albums/${albumId}/upload-selfie?max_faces=5&threshold=70, {
+      method: "POST",
+      body: formData
+    });
+  
+    if (!response.ok) {
+      console.error("❌ Erro ao enviar selfie:", response.status);
+      alert("Erro ao enviar selfie. Tente novamente.");
+      return;
     }
-    // Se não, verifica o input do arquivo
-    else if (fileInput && fileInput.files && fileInput.files.length > 0) {
-        file = fileInput.files[0];
+  
+    const data = await response.json();
+    console.log("🤖 Resultado da API:", data);
+  
+    if (!data.matches || data.matches.length === 0) {
+      console.warn("⚠️ Nenhuma imagem similar encontrada.");
+      document.getElementById("image-gallery").innerHTML = "<p>Nenhuma correspondência encontrada.</p>";
+      return;
     }
   
-    if (!file) {
-        alert("Selecione uma imagem para enviar.");
-        return;
-    }
-  
-    const albumId = new URLSearchParams(window.location.search).get("album");
-    if (!albumId) {
-        console.error("⚠️ Nenhum albumId encontrado!");
-        return;
-    }
-  
-    try {
-        console.log("📤 Enviando selfie para comparação...");
-        const formData = new FormData();
-        formData.append("file", file);
-  
-        const response = await fetch(`${API_URL}/albums/${albumId}/upload-selfie?max_faces=5&threshold=70`, {
-            method: "POST",
-            body: formData
-        });
-  
-        if (!response.ok) {
-            console.error("❌ Erro ao enviar selfie:", response.status);
-            alert("Erro ao enviar selfie. Tente novamente.");
-            return;
-        }
-  
-        const data = await response.json();
-        console.log("🤖 Resultado da API:", data);
-  
-        if (!data.matches || data.matches.length === 0) {
-            console.warn("⚠️ Nenhuma imagem similar encontrada.");
-            document.getElementById("image-gallery").innerHTML = "<p>Nenhuma correspondência encontrada.</p>";
-            return;
-        }
-  
-        displayMatchingImages(data.matches);
-    } catch (error) {
-        console.error("🚨 Erro ao enviar selfie:", error);
-    }
+    displayMatchingImages(data.matches);
+  } catch (error) {
+    console.error("🚨 Erro ao enviar selfie:", error);
+  }
 }
 
-// 🔄 Exibe os rostos mais similares encontrados (única definição)
+
+
+// 🔄 Exibe os rostos mais similares encontrados
+function displayMatchingImages(matches) {
+    const gallery = document.getElementById("image-gallery");
+    if (!gallery) return;
+
+    gallery.innerHTML = "<h3>Imagens Similares Encontradas:</h3>";
+
+    matches.forEach(match => {
+        const img = document.createElement("img");
+        img.src = https://drive.google.com/thumbnail?id=${match.image_id};
+        img.alt = Similaridade: ${match.similarity.toFixed(2)}%;
+        img.loading = "lazy";
+        img.classList.add("fade-in");
+        img.onclick = () => window.open(https://drive.google.com/uc?id=${match.image_id}&export=download, "_blank");
+
+        const info = document.createElement("p");
+        info.innerText = Similaridade: ${match.similarity.toFixed(2)}%;
+
+        gallery.appendChild(img);
+        gallery.appendChild(info);
+    });
+
+    console.log("✅ Imagens similares carregadas!");
+}
+
+
+// 🔄 Exibe os rostos mais similares encontrados
 function displayMatchingImages(matches) {
     const gallery = document.getElementById("image-gallery");
     if (!gallery) return;
@@ -214,14 +267,14 @@ function displayMatchingImages(matches) {
 
     matches.forEach(match => {
         const img = document.createElement("img");
-        img.src = `https://drive.google.com/thumbnail?id=${match.image_id}`;
-        img.alt = `Similaridade: ${match.similarity.toFixed(2)}%`;
+        img.src = https://drive.google.com/thumbnail?id=${match.image_id};
+        img.alt = Similaridade: ${match.similarity}%;
         img.loading = "lazy";
         img.classList.add("fade-in");
-        img.onclick = () => window.open(`https://drive.google.com/uc?id=${match.image_id}&export=download`, "_blank");
+        img.onclick = () => window.open(https://drive.google.com/uc?id=${match.image_id}&export=download, "_blank");
 
         const info = document.createElement("p");
-        info.innerText = `Similaridade: ${match.similarity.toFixed(2)}%`;
+        info.innerText = Similaridade: ${match.similarity.toFixed(2)}%;
 
         gallery.appendChild(img);
         gallery.appendChild(info);
@@ -230,7 +283,7 @@ function displayMatchingImages(matches) {
     console.log("✅ Imagens similares carregadas!");
 }
 
-// 🔄 Carrega os álbuns APENAS SE NÃO ESTIVER SENDO CARREGADO
+// 🔄 Carrega os álbuns **APENAS SE NÃO ESTIVER SENDO CARREGADO**
 async function loadAlbums() {
     if (isLoadingAlbums) {
         console.warn("⚠️ Já está carregando os álbuns! Ignorando nova chamada.");
@@ -239,21 +292,21 @@ async function loadAlbums() {
     isLoadingAlbums = true;
 
     const albumContainer = document.getElementById("album-container");
-    if (!albumContainer) {
-        console.warn("⚠️ Página sem #album-container, pulando carregamento de álbuns.");
-        return;
-    }
+if (!albumContainer) {
+    console.warn("⚠️ Página sem #album-container, pulando carregamento de álbuns.");
+    return;
+}
+// Mostra o loader
+albumContainer.classList.add("loading");
+albumContainer.innerHTML = '<div class="loader"></div>';
 
-    // Mostra o loader
-    albumContainer.classList.add("loading");
-    albumContainer.innerHTML = '<div class="loader"></div>';
 
     try {
         console.log("📂 Buscando álbuns...");
-        const response = await fetch(`${API_URL}/main/folders`);
+        const response = await fetch(${API_URL}/main/folders);
 
         if (!response.ok) {
-            console.warn(`⚠️ Erro na API: ${response.status}`);
+            console.warn(⚠️ Erro na API: ${response.status});
             throw new Error("Erro ao carregar álbuns.");
         }
 
@@ -272,7 +325,7 @@ async function loadAlbums() {
             const albumCard = document.createElement("div");
             albumCard.classList.add("album-card");
             albumCard.innerText = album.name;
-            albumCard.onclick = () => window.location.href = `album.html?album=${album.id}`;
+            albumCard.onclick = () => window.location.href = album.html?album=${album.id};
 
             albumContainer.appendChild(albumCard);
         });
@@ -282,18 +335,18 @@ async function loadAlbums() {
         console.error("🚨 Erro ao carregar álbuns:", error);
         albumContainer.innerHTML = "<p>Erro ao carregar os álbuns. Tente novamente mais tarde.</p>";
     } finally {
-        isLoadingAlbums = false;
+        isLoadingAlbums = false; // 🔥 Libera para futuras chamadas apenas quando terminar
         albumContainer.classList.remove("loading");
     }
 }
 
-// Inicia o carregamento ao abrir a página SOMENTE SE FOR NECESSÁRIO
+// ✅ Inicia o carregamento ao abrir a página **SOMENTE SE FOR NECESSÁRIO**
 document.addEventListener("DOMContentLoaded", () => {
     const albumId = new URLSearchParams(window.location.search).get("album");
 
     if (!albumId) {
         console.log("🖼️ Carregando lista de álbuns...");
-        loadAlbums(); // Agora é chamado apenas uma vez corretamente
+        loadAlbums(); // 🚀 Agora é chamado apenas uma vez corretamente
     } else {
         console.log("🚀 Página carregada dentro de um álbum, tentando atualizar...");
         refreshAlbum(albumId, true);
@@ -307,14 +360,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const updateAlbumBtn = document.getElementById("updateAlbumBtn");
     if (updateAlbumBtn) {
-        updateAlbumBtn.addEventListener("click", () => {
-            const albumId = new URLSearchParams(window.location.search).get("album");
-            refreshAlbum(albumId, true);
-        });
+        updateAlbumBtn.addEventListener("click", () => refreshAlbum(albumId, true));
     }
 });
 
-// Expõe funções globalmente para evitar erro "loadAlbums is not defined"
+// 📤 Expõe funções globalmente para evitar erro "loadAlbums is not defined"
 window.loadAlbums = loadAlbums;
 window.refreshAlbum = refreshAlbum;
 window.uploadSelfie = uploadSelfie;
