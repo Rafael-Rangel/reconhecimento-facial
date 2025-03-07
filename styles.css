@@ -7,6 +7,14 @@
   padding: 0;
   box-sizing: border-box;
 }
+html{
+  overflow: auto;          
+  -ms-overflow-style: none; 
+  scrollbar-width: none;   
+}
+
+html::-webkit-scrollbar {
+  display: none;           
 body {
   overflow: auto;           /* Ativa a rolagem */
   -ms-overflow-style: none; /* IE e Edge */
