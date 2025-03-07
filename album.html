@@ -12,8 +12,28 @@
 </h1>
     <button id="updateAlbumBtn">Atualizar Álbum</button></div>
 
-    <input type="file" id="fileInput">
-    <button onclick="uploadSelfie()">Enviar e Comparar</button>
+    <!-- Botão estilizado para escolher arquivo -->
+<label for="fileInput" class="fancy-btn">Escolher Arquivo</label>
+<input 
+  type="file" 
+  id="fileInput" 
+  style="display:none" 
+/>
+
+<!-- Botão estilizado para tirar foto -->
+<label for="cameraInput" class="fancy-btn">Tirar Foto</label>
+<input 
+  type="file" 
+  id="cameraInput" 
+  accept="image/*" 
+  capture="environment" 
+  style="display:none"
+/>
+
+<!-- Botões para enviar -->
+<button class="fancy-btn" onclick="uploadSelfie('fileInput')">Enviar e Comparar</button>
+<button class="fancy-btn" onclick="uploadSelfie('cameraInput')">Enviar e Comparar (Câmera)</button>
+
 
     <div id="image-gallery"></div>
 
