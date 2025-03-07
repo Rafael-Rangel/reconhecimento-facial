@@ -10,6 +10,9 @@
 .topo {
     display: flex;
 }
+h2 {
+    font-size: 110%;
+}
 .top {
     width: 100%;
     max-width: 1000px;
