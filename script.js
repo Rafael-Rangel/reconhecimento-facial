@@ -161,52 +161,64 @@ function displayImages(images) {
 }
 
 // 🔄 Envia selfie e busca rostos similares
-async function uploadSelfie(inputId) {
-  const fileInput = document.getElementById(inputId);
-  if (!fileInput || !fileInput.files.length) {
+async function uploadSelfie() {
+  // Pega os inputs
+  const fileInput = document.getElementById("fileInput");
+  const cameraInput = document.getElementById("cameraInput");
+  
+  let file = null;
+  
+  // Verifica se o input da câmera tem arquivo
+  if (cameraInput && cameraInput.files && cameraInput.files.length > 0) {
+    file = cameraInput.files[0];
+  }
+  // Se não, verifica o input do arquivo
+  else if (fileInput && fileInput.files && fileInput.files.length > 0) {
+    file = fileInput.files[0];
+  }
+  
+  if (!file) {
     alert("Selecione uma imagem para enviar.");
     return;
   }
-
-  const file = fileInput.files[0];
+  
   const albumId = new URLSearchParams(window.location.search).get("album");
-
   if (!albumId) {
     console.error("⚠️ Nenhum albumId encontrado!");
     return;
   }
-
+  
   try {
     console.log("📤 Enviando selfie para comparação...");
     const formData = new FormData();
     formData.append("file", file);
-
+  
     const response = await fetch(`${API_URL}/albums/${albumId}/upload-selfie?max_faces=5&threshold=70`, {
       method: "POST",
       body: formData
     });
-
+  
     if (!response.ok) {
       console.error("❌ Erro ao enviar selfie:", response.status);
       alert("Erro ao enviar selfie. Tente novamente.");
       return;
     }
-
+  
     const data = await response.json();
     console.log("🤖 Resultado da API:", data);
-
+  
     if (!data.matches || data.matches.length === 0) {
       console.warn("⚠️ Nenhuma imagem similar encontrada.");
       document.getElementById("image-gallery").innerHTML = "<p>Nenhuma correspondência encontrada.</p>";
       return;
     }
-
-    // Reaproveite a função de exibir imagens (já existente no seu script)
+  
     displayMatchingImages(data.matches);
   } catch (error) {
     console.error("🚨 Erro ao enviar selfie:", error);
   }
 }
+
 
 
 // 🔄 Exibe os rostos mais similares encontrados
