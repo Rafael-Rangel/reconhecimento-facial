@@ -8,9 +8,70 @@
   box-sizing: border-box;
 }
 .topo {
-    display: flex
-;
+    display: flex;
 }
+.top {
+    width: 100%;
+    max-width: 1000px;
+    padding: 20px 24px;
+    display: inline-flex;
+    align-items: center;
+    gap: 24px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, .13);
+    margin-top: 40px;
+    margin-bottom: 35px;
+}
+
+
+#image-gallery {
+  display: grid;
+  gap: 10px; /* Espaço entre as imagens */
+  grid-template-columns: repeat(4, 1fr); /* Começa com 4 colunas */
+  max-width: 1600px; /* 8 colunas * 200px (aprox.) */
+  margin: 0 auto; /* Centraliza o grid */
+}
+
+/* Aumenta pra 5 colunas a partir de 900px de largura */
+@media (min-width: 900px) {
+  #image-gallery {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+/* Aumenta pra 6 colunas a partir de 1100px */
+@media (min-width: 1100px) {
+  #image-gallery {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+
+/* Aumenta pra 7 colunas a partir de 1300px */
+@media (min-width: 1300px) {
+  #image-gallery {
+    grid-template-columns: repeat(7, 1fr);
+  }
+}
+
+/* Aumenta pra 8 colunas a partir de 1500px */
+@media (min-width: 1500px) {
+  #image-gallery {
+    grid-template-columns: repeat(8, 1fr);
+  }
+}
+
+img.fade-in {
+  width: 100%;       /* Ocupa 100% da coluna */
+  height: 200px;     /* Padroniza a altura */
+  object-fit: cover; /* Recorta sem distorcer */
+  border-radius: 10px;
+}
+
+
+div#image-gallery {
+}
+
 /* Variáveis de cores, fontes e transições */
 :root {
   --primary: #E01F34;
@@ -25,7 +86,7 @@
 /* Corpo com fundo animado e design responsivo */
 body {
     font-family: var(--font);
-    background: linear-gradient(330deg, #dddada -25%, #E01F34 48%);
+    background: #f1f5f9;
     animation: gradientBG 15s ease infinite;
     color: var(--tertiary);
     min-height: 100vh;
@@ -54,7 +115,7 @@ a:hover {
 }
 
 h1{
-  color: #fff;
+  color: #303030;
   margin-right: 15px;
 }
 
@@ -69,8 +130,6 @@ button#updateAlbumsBtn {
   color: #fff;
 }
 img.fade-in {
-    border-radius: 10px;
-    margin-right: 10px;
 }
 
 input, textarea, select {
@@ -276,7 +335,7 @@ div#album-container {
 .fancy-btn {
   position: relative;
   display: inline-block;
-  padding: 12px 24px;
+  padding: 10px 15px;
   color: var(--white);
   background: var(--primary);
   border: none;
@@ -284,6 +343,8 @@ div#album-container {
   cursor: pointer;
   overflow: hidden;
   transition: background var(--transition);
+  font-size: 13px;
+  text-align: center;
 }
 .fancy-btn::after {
   content: "";
