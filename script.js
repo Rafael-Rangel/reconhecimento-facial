@@ -6,22 +6,22 @@ let imageMap = {}; // Mapeamento ID -> Nome da imagem
 let isProcessing = false; // Evita chamadas duplicadas no álbum
 let isLoadingAlbums = false; // Evita múltiplas chamadas ao carregar álbuns
 
-// ✅ Verifica se o álbum existe antes de carregar
+// Verifica se o álbum existe antes de carregar
 async function checkAndLoadAlbum(albumId) {
     if (!albumId) {
         console.warn("⚠️ Nenhum albumId fornecido!");
         alert("Álbum inválido! Retornando à página inicial.");
-        window.location.href = "index.html"; 
+        window.location.href = "index.html";
         return;
     }
 
     try {
-        console.log(`🚀 Verificando existência do álbum: ${albumId}...`);
+        console.log(`Verificando existência do álbum: ${albumId}...`);
 
         const response = await fetch(`${API_URL}/albums/${albumId}`);
 
         if (!response.ok) {
-            console.warn(`🚨 Álbum não encontrado! Código: ${response.status}`);
+            console.warn(`ALERTA: Álbum não encontrado! Código: ${response.status}`);
 
             if (response.status === 404) {
                 alert("Este álbum não existe ou foi excluído!");
@@ -32,18 +32,18 @@ async function checkAndLoadAlbum(albumId) {
             throw new Error(`Erro ao verificar álbum (Status: ${response.status})`);
         }
 
-        console.log("✅ Álbum encontrado! Carregando imagens...");
+        console.log("Álbum encontrado! Carregando imagens...");
         refreshAlbum(albumId); // Agora podemos carregar as imagens com segurança
 
     } catch (error) {
-        console.error("🚨 Erro ao verificar o álbum:", error);
+        console.error("Erro ao verificar o álbum:", error);
         alert("Erro ao verificar álbum. Tente novamente mais tarde.");
         window.location.href = "index.html";
     }
 }
 
-// 🔄 Atualiza e carrega imagens corretamente, com VERIFICAÇÃO SE O ÁLBUM EXISTE
-let isAlbumDeleted = false; // 🔥 Flag para evitar loop infinito
+// Atualiza e carrega imagens corretamente, com verificação se o álbum existe
+let isAlbumDeleted = false; // Flag para evitar loop infinito
 
 async function refreshAlbum(albumId, forceUpdate = false) {
     if (isProcessing && !forceUpdate) {
@@ -51,14 +51,14 @@ async function refreshAlbum(albumId, forceUpdate = false) {
         return;
     }
     if (isAlbumDeleted) {
-        console.warn("🚨 O álbum foi excluído. Não faremos novas tentativas.");
+        console.warn("ALERTA: O álbum foi excluído. Não faremos novas tentativas.");
         return;
     }
 
     isProcessing = true;
 
     try {
-        console.log("🔄 Iniciando refreshAlbum para albumId:", albumId);
+        console.log("Iniciando refreshAlbum para albumId:", albumId);
         if (!albumId) {
             console.warn("⚠️ Nenhum albumId encontrado na URL!");
             return;
@@ -73,19 +73,19 @@ async function refreshAlbum(albumId, forceUpdate = false) {
         gallery.classList.add("loading");
         gallery.innerHTML = '<div class="loader"></div>';
 
-        // 🔥 Verifica primeiro se o álbum existe
+        // Verifica primeiro se o álbum existe
         let response = await fetch(`${API_URL}/albums/${albumId}/images`);
-        
+
         if (!response.ok) {
-            console.warn("🚨 O álbum não existe ou foi excluído! Código:", response.status);
+            console.warn("ALERTA: O álbum não existe ou foi excluído! Código:", response.status);
 
             if (response.status === 404) {
-                isAlbumDeleted = true; // 🔥 Marca que o álbum foi excluído
+                isAlbumDeleted = true; // Marca que o álbum foi excluído
 
                 gallery.innerHTML = `<p style="color: red;">Este álbum foi excluído ou não existe.</p>`;
-                
+
                 setTimeout(() => {
-                    window.location.href = "index.html"; // 🔄 Redireciona para a página inicial
+                    window.location.href = "index.html"; // Redireciona para a página inicial
                 }, 3000);
 
                 return;
@@ -97,14 +97,14 @@ async function refreshAlbum(albumId, forceUpdate = false) {
         let data = await response.json();
 
         if (Array.isArray(data.images) && data.images.length > 0) {
-            console.log("📸 Imagens carregadas com sucesso!");
+            console.log("Imagens carregadas com sucesso!");
             displayImages(data.images);
         } else {
             console.warn("⚠️ Nenhuma imagem encontrada.");
             gallery.innerHTML = "<p>Nenhuma imagem disponível.</p>";
         }
     } catch (error) {
-        console.error("🚨 Erro ao atualizar o álbum:", error);
+        console.error("Erro ao atualizar o álbum:", error);
         const gallery = document.getElementById("image-gallery");
         if (gallery) {
             gallery.innerHTML = "<p>Erro ao carregar as imagens. Tente novamente mais tarde.</p>";
@@ -116,25 +116,25 @@ async function refreshAlbum(albumId, forceUpdate = false) {
     }
 }
 
-// ✅ Inicia o carregamento ao abrir a página *COM VERIFICAÇÃO SE O ÁLBUM EXISTE*
+// Inicia o carregamento ao abrir a página *com verificação se o álbum existe*
 document.addEventListener("DOMContentLoaded", () => {
     const albumId = new URLSearchParams(window.location.search).get("album");
 
     if (!albumId) {
-        console.log("🖼️ Carregando lista de álbuns...");
+        console.log("Carregando lista de álbuns...");
         loadAlbums();
     } else {
-        console.log("🚀 Página carregada dentro de um álbum, verificando existência...");
+        console.log("Página carregada dentro de um álbum, verificando existência...");
 
         if (!isProcessing) {
-            isProcessing = true; // ✅ Define antes de chamar
+            isProcessing = true;
         } else {
             console.warn("⚠️ Ignorando chamada duplicada de refreshAlbum.");
         }
     }
 });
 
-// 🖼️ Exibe imagens conforme forem carregando
+// Exibe imagens conforme forem carregando
 function displayImages(images) {
     const gallery = document.getElementById("image-gallery");
     if (!gallery) return;
@@ -155,17 +155,17 @@ function displayImages(images) {
         gallery.appendChild(img);
     });
 
-    console.log("✅ Imagens carregadas com sucesso!");
+    console.log("Imagens carregadas com sucesso!");
 }
 
-// 🔄 Envia selfie e busca rostos similares
+// Envia selfie e busca rostos similares
 async function uploadSelfie() {
     // Pega os inputs
     const fileInput = document.getElementById("fileInput");
     const cameraInput = document.getElementById("cameraInput");
-    
+
     let file = null;
-    
+
     // Verifica se o input da câmera tem arquivo
     if (cameraInput && cameraInput.files && cameraInput.files.length > 0) {
         file = cameraInput.files[0];
@@ -174,50 +174,50 @@ async function uploadSelfie() {
     else if (fileInput && fileInput.files && fileInput.files.length > 0) {
         file = fileInput.files[0];
     }
-    
+
     if (!file) {
         alert("Selecione uma imagem para enviar.");
         return;
     }
-    
+
     const albumId = new URLSearchParams(window.location.search).get("album");
     if (!albumId) {
         console.error("⚠️ Nenhum albumId encontrado!");
         return;
     }
-    
+
     try {
-        console.log("📤 Enviando selfie para comparação...");
+        console.log("Enviando selfie para comparação...");
         const formData = new FormData();
         formData.append("file", file);
-    
+
         const response = await fetch(`${API_URL}/albums/${albumId}/upload-selfie?max_faces=5&threshold=70`, {
             method: "POST",
             body: formData
         });
-    
+
         if (!response.ok) {
-            console.error("❌ Erro ao enviar selfie:", response.status);
+            console.error("Erro ao enviar selfie:", response.status);
             alert("Erro ao enviar selfie. Tente novamente.");
             return;
         }
-    
+
         const data = await response.json();
-        console.log("🤖 Resultado da API:", data);
-    
+        console.log("Resultado da API:", data);
+
         if (!data.matches || data.matches.length === 0) {
             console.warn("⚠️ Nenhuma imagem similar encontrada.");
             document.getElementById("image-gallery").innerHTML = "<p>Nenhuma correspondência encontrada.</p>";
             return;
         }
-    
+
         displayMatchingImages(data.matches);
     } catch (error) {
-        console.error("🚨 Erro ao enviar selfie:", error);
+        console.error("Erro ao enviar selfie:", error);
     }
 }
 
-// 🔄 Exibe os rostos mais similares encontrados
+// Exibe os rostos mais similares encontrados
 function displayMatchingImages(matches) {
     const gallery = document.getElementById("image-gallery");
     if (!gallery) return;
@@ -245,10 +245,10 @@ function displayMatchingImages(matches) {
         gallery.appendChild(info);
     });
 
-    console.log("✅ Imagens similares carregadas!");
+    console.log("Imagens similares carregadas!");
 }
 
-// 🔄 Carrega os álbuns *APENAS SE NÃO ESTIVER SENDO CARREGADO*
+// Carrega os álbuns *apenas se não estiver sendo carregado*
 async function loadAlbums() {
     if (isLoadingAlbums) {
         console.warn("⚠️ Já está carregando os álbuns! Ignorando nova chamada.");
@@ -266,16 +266,16 @@ async function loadAlbums() {
     albumContainer.innerHTML = '<div class="loader"></div>';
 
     try {
-        console.log("📂 Buscando álbuns...");
+        console.log("Buscando álbuns...");
         const response = await fetch(`${API_URL}/main/folders`);
 
         if (!response.ok) {
-            console.warn(`⚠️ Erro na API: ${response.status}`);
+            console.warn(`ALERTA: Erro na API: ${response.status}`);
             throw new Error("Erro ao carregar álbuns.");
         }
 
         const data = await response.json();
-        console.log("📂 Álbuns recebidos:", data);
+        console.log("Álbuns recebidos:", data);
 
         albumContainer.innerHTML = "";
 
@@ -294,25 +294,25 @@ async function loadAlbums() {
             albumContainer.appendChild(albumCard);
         });
 
-        console.log("✅ Álbuns exibidos com sucesso!");
+        console.log("Álbuns exibidos com sucesso!");
     } catch (error) {
-        console.error("🚨 Erro ao carregar álbuns:", error);
+        console.error("Erro ao carregar álbuns:", error);
         albumContainer.innerHTML = "<p>Erro ao carregar os álbuns. Tente novamente mais tarde.</p>";
     } finally {
-        isLoadingAlbums = false; // 🔥 Libera para futuras chamadas apenas quando terminar
+        isLoadingAlbums = false;
         albumContainer.classList.remove("loading");
     }
 }
 
-// ✅ Inicia o carregamento ao abrir a página *SOMENTE SE FOR NECESSÁRIO*
+// Inicia o carregamento ao abrir a página *somente se for necessário*
 document.addEventListener("DOMContentLoaded", () => {
     const albumId = new URLSearchParams(window.location.search).get("album");
 
     if (!albumId) {
-        console.log("🖼️ Carregando lista de álbuns...");
-        loadAlbums(); // 🚀 Agora é chamado apenas uma vez corretamente
+        console.log("Carregando lista de álbuns...");
+        loadAlbums();
     } else {
-        console.log("🚀 Página carregada dentro de um álbum, tentando atualizar...");
+        console.log("Página carregada dentro de um álbum, tentando atualizar...");
         refreshAlbum(albumId, true);
     }
 
@@ -328,7 +328,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-// 📤 Expõe funções globalmente para evitar erro "loadAlbums is not defined"
+// Expõe funções globalmente para evitar erro "loadAlbums is not defined"
 window.loadAlbums = loadAlbums;
 window.refreshAlbum = refreshAlbum;
 window.uploadSelfie = uploadSelfie;
