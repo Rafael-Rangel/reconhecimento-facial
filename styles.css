@@ -14,9 +14,9 @@ h2 {
     font-size: 110%;
 }
 .to {
-    display: flex
-;
+    display: flex;
 }
+
 .top {
     width: 100%;
     max-width: 1000px;
@@ -29,6 +29,25 @@ h2 {
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, .13);
     margin-top: 40px;
     margin-bottom: 35px;
+}
+@media (max-width: 932px) {
+  .t {
+    text-align: center;
+  }
+  .top {
+    width: 100%;
+    max-width: 1000px;
+    padding: 20px 24px;
+    display: inline-flex;
+    align-items: center;
+    gap: 24px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, .13);
+    margin-top: 40px;
+    margin-bottom: 35px;
+    flex-direction: column;
+  }
 }
 
 
