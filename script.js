@@ -161,52 +161,53 @@ function displayImages(images) {
 }
 
 // 🔄 Envia selfie e busca rostos similares
-async function uploadSelfie() {
-    const fileInput = document.getElementById("fileInput");
-    if (!fileInput || !fileInput.files.length) {
-        alert("Selecione uma imagem para enviar.");
-        return;
+async function uploadSelfie(inputId) {
+  const fileInput = document.getElementById(inputId);
+  if (!fileInput || !fileInput.files.length) {
+    alert("Selecione uma imagem para enviar.");
+    return;
+  }
+
+  const file = fileInput.files[0];
+  const albumId = new URLSearchParams(window.location.search).get("album");
+
+  if (!albumId) {
+    console.error("⚠️ Nenhum albumId encontrado!");
+    return;
+  }
+
+  try {
+    console.log("📤 Enviando selfie para comparação...");
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await fetch(`${API_URL}/albums/${albumId}/upload-selfie?max_faces=5&threshold=70`, {
+      method: "POST",
+      body: formData
+    });
+
+    if (!response.ok) {
+      console.error("❌ Erro ao enviar selfie:", response.status);
+      alert("Erro ao enviar selfie. Tente novamente.");
+      return;
     }
 
-    const file = fileInput.files[0];
-    const albumId = new URLSearchParams(window.location.search).get("album");
+    const data = await response.json();
+    console.log("🤖 Resultado da API:", data);
 
-    if (!albumId) {
-        console.error("⚠️ Nenhum albumId encontrado!");
-        return;
+    if (!data.matches || data.matches.length === 0) {
+      console.warn("⚠️ Nenhuma imagem similar encontrada.");
+      document.getElementById("image-gallery").innerHTML = "<p>Nenhuma correspondência encontrada.</p>";
+      return;
     }
 
-    try {
-        console.log("📤 Enviando selfie para comparação...");
-        const formData = new FormData();
-        formData.append("file", file);
-
-        // 🔥 Passamos `max_faces=5` e `threshold=70` para garantir mais resultados
-        const response = await fetch(`${API_URL}/albums/${albumId}/upload-selfie?max_faces=5&threshold=70`, {
-            method: "POST",
-            body: formData
-        });
-
-        if (!response.ok) {
-            console.error("❌ Erro ao enviar selfie:", response.status);
-            alert("Erro ao enviar selfie. Tente novamente.");
-            return;
-        }
-
-        const data = await response.json();
-        console.log("🤖 Resultado da API:", data);
-
-        if (!data.matches || data.matches.length === 0) {
-            console.warn("⚠️ Nenhuma imagem similar encontrada.");
-            document.getElementById("image-gallery").innerHTML = "<p>Nenhuma correspondência encontrada.</p>";
-            return;
-        }
-
-        displayMatchingImages(data.matches);
-    } catch (error) {
-        console.error("🚨 Erro ao enviar selfie:", error);
-    }
+    // Reaproveite a função de exibir imagens (já existente no seu script)
+    displayMatchingImages(data.matches);
+  } catch (error) {
+    console.error("🚨 Erro ao enviar selfie:", error);
+  }
 }
+
 
 // 🔄 Exibe os rostos mais similares encontrados
 function displayMatchingImages(matches) {
