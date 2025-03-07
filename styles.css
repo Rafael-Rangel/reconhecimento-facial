@@ -14,7 +14,7 @@ html{
 }
 
 html::-webkit-scrollbar {
-  display: none;           
+  display: none; }          
 body {
   overflow: auto;           /* Ativa a rolagem */
   -ms-overflow-style: none; /* IE e Edge */
