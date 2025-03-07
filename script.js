@@ -106,14 +106,17 @@ gallery.innerHTML = '<div class="loader"></div>';
             gallery.innerHTML = "<p>Nenhuma imagem disponível.</p>";
         }
     } catch (error) {
-        console.error("🚨 Erro ao atualizar o álbum:", error);
-    } finally {
-        isProcessing = false;
-        const gallery = document.getElementById("image-gallery");
-        if (gallery) gallery.classList.remove("loading");
-        
+    console.error("🚨 Erro ao atualizar o álbum:", error);
+    const gallery = document.getElementById("image-gallery");
+    if (gallery) {
+        gallery.innerHTML = "<p>Erro ao carregar as imagens. Tente novamente mais tarde.</p>";
     }
+} finally {
+    isProcessing = false;
+    const gallery = document.getElementById("image-gallery");
+    if (gallery) gallery.classList.remove("loading");
 }
+
 
 
 // ✅ Inicia o carregamento ao abrir a página **COM VERIFICAÇÃO SE O ÁLBUM EXISTE**
