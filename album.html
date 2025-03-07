@@ -7,22 +7,28 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-   <div class="topo"> <h1>Galeria do Álbum
+  <div class="topo"> <h1>Galeria do Álbum
 
 </h1>
     <button id="updateAlbumBtn">Atualizar Álbum</button></div>
+    
+
+<div class="top"> <div> <h2>Encontre suas fotos por reconhecimento facial
+</h2>
+<span>Tire uma selfie ou envie sua foto de rosto.
+</span></div>
 
 <!-- Botão para escolher arquivo -->
 <label for="fileInput" class="fancy-btn">Escolher Arquivo</label>
-<input type="file" id="fileInput" style="display:none" />
+<input type="file" id="fileInput" style="display:none">
 
 <!-- Botão para tirar foto -->
 <label for="cameraInput" class="fancy-btn">Tirar Foto</label>
-<input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none" />
+<input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none">
 
 <!-- Botão único para enviar e comparar -->
 <button class="fancy-btn" onclick="uploadSelfie()">Enviar e Comparar</button>
-
+</div>
 
 
     <div id="image-gallery"></div>
