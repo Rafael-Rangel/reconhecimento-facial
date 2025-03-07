@@ -86,7 +86,11 @@ h2 {
     flex-direction: column;
     width:80%
   }
-
+.topo {
+    display: flex;
+    flex-direction: column;
+  margin-top:5px;
+}
   .fancy-btn {
     font-size: 90%;
   }
