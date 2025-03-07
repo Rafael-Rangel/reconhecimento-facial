@@ -7,6 +7,12 @@
   padding: 0;
   box-sizing: border-box;
 }
+@media (max-width: 740px) {
+  #image-gallery {
+    grid-template-columns: 1fr;
+    max-width: 100%;
+  }
+}
 html{
   overflow: auto;          
   -ms-overflow-style: none; 
@@ -47,6 +53,7 @@ h2 {
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, .13);
     margin-top: 40px;
     margin-bottom: 35px;
+    justify-content: space-between;
 }
 @media (max-width: 932px) {
   .t {
@@ -72,6 +79,7 @@ h2 {
   .to {
     display: flex;
     flex-direction: column;
+    width:80%
   }
 
   .fancy-btn {
@@ -146,10 +154,11 @@ body {
     color: var(--tertiary);
     min-height: 100vh;
     padding: 20px;
-    display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    padding-top: 80px;
+    display: flex
+;
 }
 
 /* Animação do fundo */
