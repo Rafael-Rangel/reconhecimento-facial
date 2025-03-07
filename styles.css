@@ -9,8 +9,13 @@
 }
 @media (max-width: 740px) {
   #image-gallery {
-    grid-template-columns: 1fr;
-    max-width: 100%;
+    #image-gallery {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 1600px;
+    margin: 0 auto;
+}
   }
 }
 html{
