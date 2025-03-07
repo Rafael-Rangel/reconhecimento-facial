@@ -137,6 +137,29 @@ div#album-container {
   background: #4e1e25;
 }
 
+/* Loader spinner */
+.loader {
+  border: 8px solid #f3f3f3;
+  border-top: 8px solid var(--primary);
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  animation: spin 1s linear infinite;
+  margin: 50px auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Para centralizar o loader dentro dos containers */
+#image-gallery.loading,
+#album-container.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
 
 /* Navbar fixa e estilosa */
