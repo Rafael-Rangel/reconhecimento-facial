@@ -284,7 +284,6 @@ function displayMatchingImages(matches) {
 
 
 // Carrega os álbuns apenas se não estiver sendo carregado
-// No final do código de loadAlbums
 async function loadAlbums() {
   if (isLoadingAlbums) {
     console.warn("⚠️ Já está carregando os álbuns! Ignorando nova chamada.");
@@ -322,8 +321,7 @@ async function loadAlbums() {
       return;
     }
 
-    // Variável para verificar se o primeiro álbum foi carregado
-    let firstAlbumLoaded = false;
+    let firstAlbumLoaded = false; // Variável para controlar quando o primeiro álbum foi exibido
 
     // Para cada álbum, cria um card e puxa apenas a foto "FotoCapa"
     for (const album of data.folders) {
@@ -386,7 +384,7 @@ async function loadAlbums() {
       // Adiciona ao container
       albumContainer.appendChild(albumCard);
 
-      // Após o primeiro álbum ser carregado, esconda o loader
+      // Remover o loader após o primeiro álbum ser exibido
       if (!firstAlbumLoaded) {
         isLoadingAlbums = false;
         albumContainer.classList.remove("loading");
@@ -400,7 +398,6 @@ async function loadAlbums() {
     albumContainer.innerHTML = "<p style=' color: #e01f34; width: 100vw; text-align: center;'>Erro ao carregar os álbuns. Tente novamente mais tarde.</p>";
   }
 }
-
 
 // Inicia o carregamento ao abrir a página somente se for necessário
 document.addEventListener("DOMContentLoaded", () => {
