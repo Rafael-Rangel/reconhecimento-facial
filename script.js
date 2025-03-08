@@ -6,9 +6,6 @@ let selectedImages = []; // Armazena os IDs ou URLs das imagens selecionadas
 let imageMap = {}; // Mapeamento ID -> Nome da imagem
 let isProcessing = false; // Evita chamadas duplicadas no álbum
 let isLoadingAlbums = false; // Evita múltiplas chamadas ao carregar álbuns
-const driveUrl = `https://drive.google.com/thumbnail?id=${id}`;
-const proxyUrl = `https://seu-proxy.herokuapp.com/proxy?url=${encodeURIComponent(driveUrl)}`;
-const response = await fetch(proxyUrl);
 
 // Verifica se o álbum existe antes de carregar
 async function checkAndLoadAlbum(albumId) {
