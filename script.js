@@ -116,7 +116,7 @@ async function refreshAlbum(albumId, forceUpdate = false) {
     }
 }
 
-// Inicia o carregamento ao abrir a página *com verificação se o álbum existe*
+// Inicia o carregamento ao abrir a página com verificação se o álbum existe
 document.addEventListener("DOMContentLoaded", () => {
     const albumId = new URLSearchParams(window.location.search).get("album");
 
@@ -139,49 +139,24 @@ function displayImages(images) {
     const gallery = document.getElementById("image-gallery");
     if (!gallery) return;
 
-    gallery.innerHTML = ""; // Limpa a galeria
+    gallery.innerHTML = ""; // Limpa a galeria antes de carregar as novas imagens
     imageMap = {};
 
     images.forEach(image => {
         imageMap[image.id] = image.name;
 
-        // Cria o container pra foto
-        const container = document.createElement("div");
-        container.classList.add("photo-container");
-        // Armazena o fileId para uso no download
-        container.dataset.fileId = image.id;
-
-        // Cria a imagem
         const img = document.createElement("img");
-        // Exibe a miniatura (thumbnail)
-       img.src = `https://drive.google.com/thumbnail?id=${image.id}`;
+        img.src = https://drive.google.com/thumbnail?id=${image.id};
         img.alt = image.name;
         img.loading = "lazy";
         img.classList.add("fade-in");
+        img.onclick = () => window.open(image.url, "_blank");
 
-        // Ao clicar na imagem, abre o link completo (evita propagação para o container)
-        img.onclick = (e) => {
-            e.stopPropagation();
-            window.open(image.url, "_blank");
-        };
-
-        // Cria a bolinha de seleção
-        const selectionCircle = document.createElement("div");
-        selectionCircle.classList.add("selection-circle");
-
-        // Alterna o estado selecionado ao clicar no container
-        container.addEventListener("click", function(e) {
-            container.classList.toggle("selected");
-        });
-
-        container.appendChild(img);
-        container.appendChild(selectionCircle);
-        gallery.appendChild(container);
+        gallery.appendChild(img);
     });
 
     console.log("Imagens carregadas com sucesso!");
 }
-
 
 // Envia selfie e busca rostos similares
 async function uploadSelfie() {
@@ -265,40 +240,21 @@ function displayMatchingImages(matches) {
     }
 
     matches.forEach(match => {
-        // Cria o container para a foto
-        const container = document.createElement("div");
-        container.classList.add("photo-container");
-        // Armazena o fileId para uso no download
-        container.dataset.fileId = match.image_id;
-
-        // Cria a imagem usando a URL da API
         const img = document.createElement("img");
-        img.src = ${API_URL}/api/images/${match.image_id};  // Aqui usamos o endpoint da sua API
-        img.alt = "";
+        img.src = https://drive.google.com/thumbnail?id=${match.image_id};
+        img.alt = ""; // Sem texto de similaridade
         img.loading = "lazy";
         img.classList.add("fade-in");
+        img.onclick = () => window.open(https://drive.google.com/uc?id=${match.image_id}&export=download, "_blank");
 
-        // Cria a bolinha de seleção
-        const selectionCircle = document.createElement("div");
-        selectionCircle.classList.add("selection-circle");
-
-        // Ao clicar no container, alterna o estado selecionado
-        container.addEventListener("click", function(e) {
-            container.classList.toggle("selected");
-        });
-
-        container.appendChild(img);
-        container.appendChild(selectionCircle);
-        gallery.appendChild(container);
+        gallery.appendChild(img);
     });
 
     console.log("Imagens similares carregadas!");
 }
 
 
-
-
-// Carrega os álbuns *apenas se não estiver sendo carregado*
+// Carrega os álbuns apenas se não estiver sendo carregado
 async function loadAlbums() {
     if (isLoadingAlbums) {
         console.warn("⚠️ Já está carregando os álbuns! Ignorando nova chamada.");
@@ -354,7 +310,7 @@ async function loadAlbums() {
     }
 }
 
-// Inicia o carregamento ao abrir a página *somente se for necessário*
+// Inicia o carregamento ao abrir a página somente se for necessário
 document.addEventListener("DOMContentLoaded", () => {
     const albumId = new URLSearchParams(window.location.search).get("album");
 
@@ -377,146 +333,6 @@ document.addEventListener("DOMContentLoaded", () => {
         updateAlbumBtn.addEventListener("click", () => refreshAlbum(albumId, true));
     }
 });
-
-// Botão para selecionar todas as fotos
-document.getElementById("select-all-btn").addEventListener("click", function() {
-    const containers = document.querySelectorAll(".photo-container");
-    containers.forEach(container => container.classList.add("selected"));
-});
-
-// Botão para baixar fotos selecionadas
-document.getElementById("download-selected-btn").addEventListener("click", async function() {
-    const selectedContainers = document.querySelectorAll(".photo-container.selected");
-    if (selectedContainers.length === 0) {
-        alert("Nenhuma foto selecionada!");
-        return;
-    }
-    if (selectedContainers.length === 1) {
-        // Se só uma foto estiver selecionada, baixa direto
-        const fileId = selectedContainers[0].dataset.fileId;
-        if (fileId) {
-            downloadFileBlob(fileId)
-                .then(blob => {
-                    const url = URL.createObjectURL(blob);
-                    const link = document.createElement("a");
-                    link.href = url;
-                    link.download = "foto.jpg";
-                    link.click();
-                })
-                .catch(err => console.error(err));
-        }
-    } else {
-        // Se 2 ou mais, cria um ZIP com todas as imagens
-        const zip = new JSZip();
-        const folder = zip.folder("fotos_selecionadas");
-        const downloadPromises = [];
-        
-        selectedContainers.forEach((container, index) => {
-            const fileId = container.dataset.fileId;
-            if (fileId) {
-                const promise = downloadFileBlob(fileId)
-                    .then(blob => {
-                        folder.file(foto${index + 1}.jpg, blob);
-                    })
-                    .catch(err => console.error("Erro ao baixar arquivo", err));
-                downloadPromises.push(promise);
-            }
-        });
-        
-        Promise.all(downloadPromises).then(() => {
-            zip.generateAsync({ type: "blob" }).then(function(content) {
-                const link = document.createElement("a");
-                link.href = URL.createObjectURL(content);
-                link.download = "fotos_selecionadas.zip";
-                link.click();
-            });
-        });
-    }
-});
-
-
-// Função para inicializar o gapi client
-function initClient() {
-    gapi.client.init({
-        clientId: '798820518733-4d1kk05g0vtl1hfnnfere4i5kv3uafbb.apps.googleusercontent.com',
-        scope: 'https://www.googleapis.com/auth/drive.readonly',
-        discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest']
-    }).then(function () {
-        // Verifica se o usuário está logado
-        if (!gapi.auth2.getAuthInstance().isSignedIn.get()) {
-            gapi.auth2.getAuthInstance().signIn();
-        }
-    }, function(error) {
-        console.error('Erro ao inicializar o gapi:', error);
-    });
-}
-
-// Carrega a biblioteca e inicia o client
-function handleClientLoad() {
-    gapi.load('client:auth2', initClient);
-}
-
-
-// Função para baixar o conteúdo de um arquivo (imagem)
-function downloadFile(fileId) {
-    return gapi.client.drive.files.get({
-        fileId: fileId,
-        alt: 'media'
-    }).then(function(response) {
-        // Retorna os dados do arquivo
-        return response.body;
-    }, function(error) {
-        console.error('Erro ao baixar o arquivo:', error);
-    });
-}
-function criarZipComImagens(fileIds) {
-    const zip = new JSZip();
-    const folder = zip.folder("fotos_selecionadas");
-    const promises = [];
-
-    fileIds.forEach((id, index) => {
-        const prom = gapi.client.drive.files.get({
-            fileId: id,
-            alt: 'media'
-        }).then(response => {
-            // Aqui, você precisará converter a resposta para blob
-            // Isso pode variar conforme a resposta retornada pelo gapi
-            const blob = new Blob([response.body], { type: 'image/jpeg' });
-            folder.file(foto${index + 1}.jpg, blob);
-        });
-        promises.push(prom);
-    });
-
-    Promise.all(promises).then(() => {
-        zip.generateAsync({ type: 'blob' }).then(function(content) {
-            // Cria um link temporário para download
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(content);
-            link.download = "fotos_selecionadas.zip";
-            link.click();
-        });
-    });
-}
-
-function downloadFileBlob(fileId) {
-    return new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        // Usa o endpoint da API para baixar o arquivo
-        xhr.open('GET', ${API_URL}/api/images/${fileId});
-        xhr.responseType = 'blob';
-        xhr.onload = () => {
-            if (xhr.status === 200) {
-                resolve(xhr.response);
-            } else {
-                reject(new Error('Erro ao baixar arquivo: ' + xhr.status));
-            }
-        };
-        xhr.onerror = () => reject(new Error('Erro na requisição.'));
-        xhr.send();
-    });
-}
-
-
 
 // Expõe funções globalmente para evitar erro "loadAlbums is not defined"
 window.loadAlbums = loadAlbums;
