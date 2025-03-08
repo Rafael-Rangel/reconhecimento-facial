@@ -347,8 +347,11 @@ async function loadAlbums() {
         const imagesData = await resImages.json();
 
         if (Array.isArray(imagesData.images)) {
-          // Procura pela imagem que tenha nome "FotoCapa" (ajuste se o nome for diferente)
-          const fotoCapa = imagesData.images.find(img => img.name.toLowerCase() === "fotocapa");
+          // Ajuste aqui: usamos startsWith("fotocapa") pra ignorar extensões
+          const fotoCapa = imagesData.images.find(img =>
+            img.name.toLowerCase().startsWith("fotocapa")
+          );
+
           if (fotoCapa) {
             coverImg.src = `https://drive.google.com/thumbnail?id=${fotoCapa.id}`;
           } else {
@@ -361,7 +364,7 @@ async function loadAlbums() {
       } catch (error) {
         // Se der erro, coloca um placeholder
         console.error("Erro ao buscar capa:", error);
-        coverImg.src = "https://via.placeholder.com/300x200?text=Erro+Capa";
+        coverImg.src = "https://placehold.co/300x200?text=Erro+Capa";
       }
 
       // Ao clicar no card, vai pro álbum
