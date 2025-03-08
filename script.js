@@ -384,6 +384,7 @@ async function loadAlbums() {
 
       // Após o primeiro álbum ser carregado, remova o loader
       if (!firstAlbumLoaded) {
+        console.log("Primeiro álbum carregado! Removendo loader...");
         firstAlbumLoaded = true;  // Marca que o primeiro álbum foi carregado
         albumContainer.classList.remove("loading");  // Remove o loader
       }
