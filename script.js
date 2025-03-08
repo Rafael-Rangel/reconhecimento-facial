@@ -16,12 +16,12 @@ async function checkAndLoadAlbum(albumId) {
     }
 
     try {
-        console.log(`Verificando existência do álbum: ${albumId}...`);
+        console.log(Verificando existência do álbum: ${albumId}...);
 
-        const response = await fetch(`${API_URL}/albums/${albumId}`);
+        const response = await fetch(${API_URL}/albums/${albumId});
 
         if (!response.ok) {
-            console.warn(`ALERTA: Álbum não encontrado! Código: ${response.status}`);
+            console.warn(ALERTA: Álbum não encontrado! Código: ${response.status});
 
             if (response.status === 404) {
                 alert("Este álbum não existe ou foi excluído!");
@@ -29,7 +29,7 @@ async function checkAndLoadAlbum(albumId) {
                 return;
             }
 
-            throw new Error(`Erro ao verificar álbum (Status: ${response.status})`);
+            throw new Error(Erro ao verificar álbum (Status: ${response.status}));
         }
 
         console.log("Álbum encontrado! Carregando imagens...");
@@ -74,7 +74,7 @@ async function refreshAlbum(albumId, forceUpdate = false) {
         gallery.innerHTML = '<div class="loader"></div>';
 
         // Verifica primeiro se o álbum existe
-        let response = await fetch(`${API_URL}/albums/${albumId}/images`);
+        let response = await fetch(${API_URL}/albums/${albumId}/images);
 
         if (!response.ok) {
             console.warn("ALERTA: O álbum não existe ou foi excluído! Código:", response.status);
@@ -82,7 +82,7 @@ async function refreshAlbum(albumId, forceUpdate = false) {
             if (response.status === 404) {
                 isAlbumDeleted = true; // Marca que o álbum foi excluído
 
-                gallery.innerHTML = `<p style=" color: #e01f34; width: 100vw;text-align: center;color: #e01f34;">Este álbum foi excluído ou não existe.</p>`;
+                gallery.innerHTML = <p style=" color: #e01f34; width: 100vw;text-align: center;color: #e01f34;">Este álbum foi excluído ou não existe.</p>;
 
                 setTimeout(() => {
                     window.location.href = "index.html"; // Redireciona para a página inicial
@@ -91,7 +91,7 @@ async function refreshAlbum(albumId, forceUpdate = false) {
                 return;
             }
 
-            throw new Error(`Erro ao carregar álbum (Status: ${response.status})`);
+            throw new Error(Erro ao carregar álbum (Status: ${response.status}));
         } 
 
         let data = await response.json();
@@ -154,7 +154,7 @@ function displayImages(images) {
         // Cria a imagem
         const img = document.createElement("img");
         // Exibe a miniatura (thumbnail)
-        img.src = `${API_URL}/api/images/${image.id}`;
+       img.src = `https://drive.google.com/thumbnail?id=${image.id}`;
         img.alt = image.name;
         img.loading = "lazy";
         img.classList.add("fade-in");
@@ -222,7 +222,7 @@ async function uploadSelfie() {
         const formData = new FormData();
         formData.append("file", file);
 
-        const response = await fetch(`${API_URL}/albums/${albumId}/upload-selfie?max_faces=5&threshold=70`, {
+        const response = await fetch(${API_URL}/albums/${albumId}/upload-selfie?max_faces=5&threshold=70, {
             method: "POST",
             body: formData
         });
@@ -273,7 +273,7 @@ function displayMatchingImages(matches) {
 
         // Cria a imagem usando a URL da API
         const img = document.createElement("img");
-        img.src = `${API_URL}/api/images/${match.image_id}`;
+        img.src = ${API_URL}/api/images/${match.image_id};  // Aqui usamos o endpoint da sua API
         img.alt = "";
         img.loading = "lazy";
         img.classList.add("fade-in");
@@ -297,6 +297,7 @@ function displayMatchingImages(matches) {
 
 
 
+
 // Carrega os álbuns *apenas se não estiver sendo carregado*
 async function loadAlbums() {
     if (isLoadingAlbums) {
@@ -316,10 +317,10 @@ async function loadAlbums() {
 
     try {
         console.log("Buscando álbuns...");
-        const response = await fetch(`${API_URL}/main/folders`);
+        const response = await fetch(${API_URL}/main/folders);
 
         if (!response.ok) {
-            console.warn(`ALERTA: Erro na API: ${response.status}`);
+            console.warn(ALERTA: Erro na API: ${response.status});
             throw new Error("Erro ao carregar álbuns.");
         }
 
@@ -338,7 +339,7 @@ async function loadAlbums() {
             const albumCard = document.createElement("div");
             albumCard.classList.add("album-card");
             albumCard.innerText = album.name;
-            albumCard.onclick = () => window.location.href = `album.html?album=${album.id}`;
+            albumCard.onclick = () => window.location.href = album.html?album=${album.id};
 
             albumContainer.appendChild(albumCard);
         });
@@ -415,7 +416,7 @@ document.getElementById("download-selected-btn").addEventListener("click", async
             if (fileId) {
                 const promise = downloadFileBlob(fileId)
                     .then(blob => {
-                        folder.file(`foto${index + 1}.jpg`, blob);
+                        folder.file(foto${index + 1}.jpg, blob);
                     })
                     .catch(err => console.error("Erro ao baixar arquivo", err));
                 downloadPromises.push(promise);
@@ -481,7 +482,7 @@ function criarZipComImagens(fileIds) {
             // Aqui, você precisará converter a resposta para blob
             // Isso pode variar conforme a resposta retornada pelo gapi
             const blob = new Blob([response.body], { type: 'image/jpeg' });
-            folder.file(`foto${index + 1}.jpg`, blob);
+            folder.file(foto${index + 1}.jpg, blob);
         });
         promises.push(prom);
     });
@@ -501,7 +502,7 @@ function downloadFileBlob(fileId) {
     return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         // Usa o endpoint da API para baixar o arquivo
-        xhr.open('GET', `${API_URL}/api/images/${fileId}`);
+        xhr.open('GET', ${API_URL}/api/images/${fileId});
         xhr.responseType = 'blob';
         xhr.onload = () => {
             if (xhr.status === 200) {
@@ -514,6 +515,7 @@ function downloadFileBlob(fileId) {
         xhr.send();
     });
 }
+
 
 
 // Expõe funções globalmente para evitar erro "loadAlbums is not defined"
