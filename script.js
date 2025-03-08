@@ -230,32 +230,29 @@ async function uploadSelfie() {
 function displayMatchingImages(matches) {
     const gallery = document.getElementById("image-gallery");
     if (!gallery) return;
-    
-    gallery.innerHTML = "<h3>Imagens Similares Encontradas:</h3>";
+
+    gallery.innerHTML = ""; // Limpa a galeria
 
     if (!Array.isArray(matches) || matches.length === 0) {
         console.warn("⚠️ Nenhuma imagem similar encontrada.");
-        gallery.innerHTML += "<p style=' color: #e01f34;width: 100vw; text-align: center;'>Nenhuma imagem correspondente.</p>";
+        gallery.innerHTML = "<p>Nenhuma imagem correspondente.</p>";
         return;
     }
 
     matches.forEach(match => {
         const img = document.createElement("img");
         img.src = `https://drive.google.com/thumbnail?id=${match.image_id}`;
-        img.alt = `Similaridade: ${match.similarity.toFixed(2)}%`;
+        img.alt = ""; // Sem texto de similaridade
         img.loading = "lazy";
         img.classList.add("fade-in");
         img.onclick = () => window.open(`https://drive.google.com/uc?id=${match.image_id}&export=download`, "_blank");
 
-        const info = document.createElement("p");
-        info.innerText = `Similaridade: ${match.similarity.toFixed(2)}%`;
-
         gallery.appendChild(img);
-        gallery.appendChild(info);
     });
 
     console.log("Imagens similares carregadas!");
 }
+
 
 // Carrega os álbuns *apenas se não estiver sendo carregado*
 async function loadAlbums() {
