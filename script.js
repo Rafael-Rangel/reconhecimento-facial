@@ -1,6 +1,7 @@
 //const API_URL = "https://cors-anywhere.herokuapp.com/http://3.12.76.155:8000/api";
 const API_URL = "https://projetofotografo.zapto.org/api";
 // autorização 1hr: https://cors-anywhere.herokuapp.com/corsdemo
+let selectedImages = []; // Armazena os IDs ou URLs das imagens selecionadas
 
 let imageMap = {}; // Mapeamento ID -> Nome da imagem
 let isProcessing = false; // Evita chamadas duplicadas no álbum
@@ -137,26 +138,51 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // Exibe imagens conforme forem carregando
 function displayImages(images) {
-    const gallery = document.getElementById("image-gallery");
-    if (!gallery) return;
+  const gallery = document.getElementById("image-gallery");
+  if (!gallery) return;
 
-    gallery.innerHTML = ""; // Limpa a galeria antes de carregar as novas imagens
-    imageMap = {};
+  gallery.innerHTML = ""; // Limpa a galeria
+  imageMap = {};
+  selectedImages = []; // Reseta as seleções
 
-    images.forEach(image => {
-        imageMap[image.id] = image.name;
+  images.forEach(image => {
+    imageMap[image.id] = image.name;
 
-        const img = document.createElement("img");
-        img.src = `https://drive.google.com/thumbnail?id=${image.id}`;
-        img.alt = image.name;
-        img.loading = "lazy";
-        img.classList.add("fade-in");
-        img.onclick = () => window.open(image.url, "_blank");
+    // Cria o container
+    const container = document.createElement("div");
+    container.classList.add("photo-container");
 
-        gallery.appendChild(img);
-    });
+    // Cria a imagem
+    const img = document.createElement("img");
+    img.src = `https://drive.google.com/thumbnail?id=${image.id}`;
+    img.alt = image.name;
+    img.loading = "lazy";
+    img.classList.add("fade-in");
+    // Clique duplo para abrir a imagem
+    img.onclick = () => window.open(image.url, "_blank");
 
-    console.log("Imagens carregadas com sucesso!");
+    // Cria a bolinha de seleção
+    const circle = document.createElement("div");
+    circle.classList.add("selection-circle");
+    // Ao clicar no container, alterna a seleção
+    container.onclick = (e) => {
+      // Evita que o clique na imagem abra a foto
+      if (e.target !== container) return;
+      container.classList.toggle("selected");
+      const isSelected = container.classList.contains("selected");
+      if (isSelected) {
+        selectedImages.push(image.id);
+      } else {
+        selectedImages = selectedImages.filter(id => id !== image.id);
+      }
+    };
+
+    container.appendChild(img);
+    container.appendChild(circle);
+    gallery.appendChild(container);
+  });
+
+  console.log("Imagens carregadas com sucesso!");
 }
 
 // Envia selfie e busca rostos similares
@@ -337,6 +363,62 @@ document.addEventListener("DOMContentLoaded", () => {
         updateAlbumBtn.addEventListener("click", () => refreshAlbum(albumId, true));
     }
 });
+
+document.getElementById("select-all-btn").addEventListener("click", () => {
+  const containers = document.querySelectorAll(".photo-container");
+  selectedImages = [];
+  containers.forEach(container => {
+    if (!container.classList.contains("selected")) {
+      container.classList.add("selected");
+      // Obtenha o ID da imagem, assumindo que o ID está no src (ou de outra forma)
+      const img = container.querySelector("img");
+      // Exemplo: extraia o ID da URL do Google Drive
+      const url = img.src;
+      const idMatch = url.match(/id=([^&]+)/);
+      if (idMatch) {
+        selectedImages.push(idMatch[1]);
+      }
+    }
+  });
+  console.log("Selecionadas todas:", selectedImages);
+});
+
+document.getElementById("download-selected-btn").addEventListener("click", () => {
+  if (selectedImages.length === 0) {
+    alert("Nenhuma imagem selecionada!");
+    return;
+  }
+  downloadSelectedImages(selectedImages);
+});
+
+
+async function downloadSelectedImages(selectedIds) {
+  const zip = new JSZip();
+  const imgFolder = zip.folder("imagens");
+
+  for (let i = 0; i < selectedIds.length; i++) {
+    const id = selectedIds[i];
+    const url = `https://drive.google.com/thumbnail?id=${id}`;
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const fileName = `imagem_${i + 1}.jpg`;
+      imgFolder.file(fileName, blob);
+    } catch (error) {
+      console.error("Erro ao baixar a imagem:", url, error);
+    }
+  }
+
+  zip.generateAsync({ type: "blob" }).then(function(content) {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(content);
+    a.download = "imagens.zip";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  });
+}
+
 
 // Expõe funções globalmente para evitar erro "loadAlbums is not defined"
 window.loadAlbums = loadAlbums;
