@@ -398,6 +398,7 @@ async function loadAlbums() {
 }
 
 
+
 // Inicia o carregamento ao abrir a página somente se for necessário
 document.addEventListener("DOMContentLoaded", () => {
     const albumId = new URLSearchParams(window.location.search).get("album");
