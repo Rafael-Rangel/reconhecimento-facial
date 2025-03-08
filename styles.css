@@ -7,6 +7,69 @@
   padding: 0;
   box-sizing: border-box;
 }
+
+/* Container da foto com posição relativa */
+.photo-container {
+    position: relative;
+    display: inline-block;
+}
+
+/* A imagem vai ter cursor pointer e animação de grow no hover */
+.photo-container img {
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.photo-container:hover img {
+    transform: scale(1.05);
+}
+
+/* Bolinha de seleção (inicialmente invisível) */
+.selection-circle {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    display: none;
+    transition: background 0.3s ease;
+}
+
+/* Exibe a bolinha quando passa o mouse */
+.photo-container:hover .selection-circle {
+    display: block;
+}
+
+/* Se o container estiver selecionado, a bolinha fica vermelha */
+.photo-container.selected .selection-circle {
+    background: red;
+}
+
+/* Estilos pra div de controle */
+#selection-controls {
+    margin: 20px;
+    text-align: center;
+}
+
+#selection-controls button {
+    margin: 5px;
+    padding: 10px 20px;
+    background: #E01F34;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+#selection-controls button:hover {
+    background: #4e1e25;
+}
+
+
 @media (max-width: 740px) {
   #image-gallery {
     #image-gallery {
