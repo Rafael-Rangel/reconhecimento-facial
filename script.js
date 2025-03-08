@@ -400,7 +400,7 @@ async function downloadSelectedImages(selectedIds) {
   for (let i = 0; i < selectedIds.length; i++) {
     const id = selectedIds[i];
     // Monta a URL original do Drive
-    const driveUrl = `https://drive.google.com/thumbnail?id=${id}`;
+    const driveUrl = `https://drive.google.com/uc?id=${id}&export=download`;
     // Monta a URL do proxy (substitua com o domínio real do seu proxy)
     const proxyUrl = `https://reconhecimento-facial-kappa.vercel.app/proxy?url=${encodeURIComponent(driveUrl)}`;
     
