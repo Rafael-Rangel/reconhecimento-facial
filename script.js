@@ -349,7 +349,7 @@ coverImg.addEventListener("mouseleave", () => {
 
       // Busca as imagens do álbum
       try {
-        const resImages = await fetch('${API_URL}/albums/${album.id}/images');
+        const resImages = await fetch(`${API_URL}/albums/${album.id}/images`);
         if (!resImages.ok) {
           console.warn('Erro ao buscar imagens do álbum ${album.id}');
           throw new Error("Erro ao carregar imagens do álbum.");
