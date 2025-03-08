@@ -353,10 +353,10 @@ async function loadAlbums() {
             coverImg.src = `https://drive.google.com/thumbnail?id=${fotoCapa.id}`;
           } else {
             // Caso não tenha a "FotoCapa", exibe um placeholder
-            coverImg.src = "https://via.placeholder.com/300x200?text=Sem+Capa";
+            coverImg.src = "https://placehold.co/300x200?text=Sem+Capa";
           }
         } else {
-          coverImg.src = "https://via.placeholder.com/300x200?text=Sem+Capa";
+          coverImg.src = "https://placehold.co/300x200?text=Sem+Capa";
         }
       } catch (error) {
         // Se der erro, coloca um placeholder
