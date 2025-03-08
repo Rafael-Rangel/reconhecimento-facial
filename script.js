@@ -394,11 +394,13 @@ coverImg.addEventListener("mouseleave", () => {
   } catch (error) {
     console.error("Erro ao carregar álbuns:", error);
     albumContainer.innerHTML = "<p style=' color: #e01f34; width: 100vw; text-align: center;'>Erro ao carregar os álbuns. Tente novamente mais tarde.</p>";
-  } finally {
-    isLoadingAlbums = false;
-    albumContainer.classList.remove("loading");
+} finally {
+  isLoadingAlbums = false;
+  if (albumContainer.querySelector(".loader")) {
+    albumContainer.querySelector(".loader").remove();
   }
 }
+
 
 
 // Inicia o carregamento ao abrir a página somente se for necessário
