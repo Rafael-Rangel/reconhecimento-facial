@@ -302,10 +302,10 @@ async function loadAlbums() {
 
   try {
     console.log("Buscando álbuns...");
-    const response = await fetch(${API_URL}/main/folders);
+    const response = await fetch('${API_URL}/main/folders');
 
     if (!response.ok) {
-      console.warn(ALERTA: Erro na API: ${response.status});
+      console.warn('ALERTA: Erro na API: ${response.status}');
       throw new Error("Erro ao carregar álbuns.");
     }
 
@@ -349,9 +349,9 @@ coverImg.addEventListener("mouseleave", () => {
 
       // Busca as imagens do álbum
       try {
-        const resImages = await fetch(${API_URL}/albums/${album.id}/images);
+        const resImages = await fetch('${API_URL}/albums/${album.id}/images');
         if (!resImages.ok) {
-          console.warn(Erro ao buscar imagens do álbum ${album.id});
+          console.warn('Erro ao buscar imagens do álbum ${album.id}');
           throw new Error("Erro ao carregar imagens do álbum.");
         }
         const imagesData = await resImages.json();
@@ -363,7 +363,7 @@ coverImg.addEventListener("mouseleave", () => {
           );
 
           if (fotoCapa) {
-            coverImg.src = https://drive.google.com/thumbnail?id=${fotoCapa.id};
+            coverImg.src = 'https://drive.google.com/thumbnail?id=${fotoCapa.id}';
           } else {
             // Caso não tenha a "FotoCapa", exibe um placeholder
             coverImg.src = "https://placehold.co/300x200?text=Sem+Capa";
@@ -379,7 +379,7 @@ coverImg.addEventListener("mouseleave", () => {
 
       // Ao clicar no card, vai pro álbum
       albumCard.onclick = () => {
-        window.location.href = album.html?album=${album.id};
+        window.location.href = `album.html?album=${album.id}`;
       };
 
       // Monta o card
@@ -401,7 +401,6 @@ coverImg.addEventListener("mouseleave", () => {
   }
 }
 }
-
 
 // Inicia o carregamento ao abrir a página somente se for necessário
 document.addEventListener("DOMContentLoaded", () => {
