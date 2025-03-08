@@ -16,12 +16,11 @@ async function checkAndLoadAlbum(albumId) {
     }
 
     try {
-        console.log(Verificando existência do álbum: ${albumId}...);
-
-        const response = await fetch(${API_URL}/albums/${albumId});
+        console.log(`Verificando existência do álbum: ${albumId}...`);
+        const response = await fetch(`${API_URL}/albums/${albumId}`);
 
         if (!response.ok) {
-            console.warn(ALERTA: Álbum não encontrado! Código: ${response.status});
+                console.warn(`ALERTA: Álbum não encontrado! Código: ${response.status}`);
 
             if (response.status === 404) {
                 alert("Este álbum não existe ou foi excluído!");
@@ -29,7 +28,7 @@ async function checkAndLoadAlbum(albumId) {
                 return;
             }
 
-            throw new Error(Erro ao verificar álbum (Status: ${response.status}));
+                throw new Error(`Erro ao verificar álbum (Status: ${response.status})`);
         }
 
         console.log("Álbum encontrado! Carregando imagens...");
@@ -74,7 +73,8 @@ async function refreshAlbum(albumId, forceUpdate = false) {
         gallery.innerHTML = '<div class="loader"></div>';
 
         // Verifica primeiro se o álbum existe
-        let response = await fetch(${API_URL}/albums/${albumId}/images);
+       let response = await fetch(`${API_URL}/albums/${albumId}/images`);
+
 
         if (!response.ok) {
             console.warn("ALERTA: O álbum não existe ou foi excluído! Código:", response.status);
@@ -82,7 +82,7 @@ async function refreshAlbum(albumId, forceUpdate = false) {
             if (response.status === 404) {
                 isAlbumDeleted = true; // Marca que o álbum foi excluído
 
-                gallery.innerHTML = <p style=" color: #e01f34; width: 100vw;text-align: center;color: #e01f34;">Este álbum foi excluído ou não existe.</p>;
+               gallery.innerHTML = `<p style="color: #e01f34; width: 100vw; text-align: center;">Este álbum foi excluído ou não existe.</p>`;
 
                 setTimeout(() => {
                     window.location.href = "index.html"; // Redireciona para a página inicial
@@ -91,7 +91,8 @@ async function refreshAlbum(albumId, forceUpdate = false) {
                 return;
             }
 
-            throw new Error(Erro ao carregar álbum (Status: ${response.status}));
+            throw new Error(`Erro ao carregar álbum (Status: ${response.status})`);
+
         } 
 
         let data = await response.json();
@@ -146,7 +147,7 @@ function displayImages(images) {
         imageMap[image.id] = image.name;
 
         const img = document.createElement("img");
-        img.src = https://drive.google.com/thumbnail?id=${image.id};
+        img.src = `https://drive.google.com/thumbnail?id=${image.id}`;
         img.alt = image.name;
         img.loading = "lazy";
         img.classList.add("fade-in");
@@ -241,11 +242,11 @@ function displayMatchingImages(matches) {
 
     matches.forEach(match => {
         const img = document.createElement("img");
-        img.src = https://drive.google.com/thumbnail?id=${match.image_id};
+       img.src = `https://drive.google.com/thumbnail?id=${match.image_id}`;
         img.alt = ""; // Sem texto de similaridade
         img.loading = "lazy";
         img.classList.add("fade-in");
-        img.onclick = () => window.open(https://drive.google.com/uc?id=${match.image_id}&export=download, "_blank");
+        img.onclick = () => window.open(`https://drive.google.com/uc?id=${match.image_id}&export=download`, "_blank");
 
         gallery.appendChild(img);
     });
@@ -273,10 +274,11 @@ async function loadAlbums() {
 
     try {
         console.log("Buscando álbuns...");
-        const response = await fetch(${API_URL}/main/folders);
+        const response = await fetch(`${API_URL}/main/folders`);
+
 
         if (!response.ok) {
-            console.warn(ALERTA: Erro na API: ${response.status});
+            console.warn(`ALERTA: Erro na API: ${response.status}`);
             throw new Error("Erro ao carregar álbuns.");
         }
 
@@ -295,7 +297,8 @@ async function loadAlbums() {
             const albumCard = document.createElement("div");
             albumCard.classList.add("album-card");
             albumCard.innerText = album.name;
-            albumCard.onclick = () => window.location.href = album.html?album=${album.id};
+            albumCard.onclick = () => window.location.href = `album.html?album=${album.id}`;
+
 
             albumContainer.appendChild(albumCard);
         });
