@@ -139,7 +139,7 @@ function displayImages(images) {
     const gallery = document.getElementById("image-gallery");
     if (!gallery) return;
 
-    gallery.innerHTML = ""; // Limpa a galeria antes de carregar as novas imagens
+    gallery.innerHTML = ""; // Limpa a galeria
     imageMap = {};
 
     images.forEach(image => {
@@ -148,17 +148,19 @@ function displayImages(images) {
         // Cria o container pra foto
         const container = document.createElement("div");
         container.classList.add("photo-container");
+        // Armazena o fileId para uso no download
+        container.dataset.fileId = image.id;
 
         // Cria a imagem
         const img = document.createElement("img");
+        // Exibe a miniatura (thumbnail)
         img.src = `https://drive.google.com/thumbnail?id=${image.id}`;
         img.alt = image.name;
         img.loading = "lazy";
         img.classList.add("fade-in");
 
-        // Quando clicar na imagem, abre o link completo
+        // Ao clicar na imagem, abre o link completo (evita propagação para o container)
         img.onclick = (e) => {
-            // Evita que o clique no container se repita
             e.stopPropagation();
             window.open(image.url, "_blank");
         };
@@ -167,7 +169,7 @@ function displayImages(images) {
         const selectionCircle = document.createElement("div");
         selectionCircle.classList.add("selection-circle");
 
-        // Ao clicar no container, alterna o estado selecionado
+        // Alterna o estado selecionado ao clicar no container
         container.addEventListener("click", function(e) {
             container.classList.toggle("selected");
         });
@@ -263,24 +265,31 @@ function displayMatchingImages(matches) {
     }
 
     matches.forEach(match => {
-        // Cria um container pra cada foto
+        // Cria o container para a foto
         const container = document.createElement("div");
         container.classList.add("photo-container");
+        // Armazena o fileId para download via gapi
+        container.dataset.fileId = match.image_id;
 
-        // Cria a imagem
+        // Cria a imagem usando a URL da thumbnail do Drive
         const img = document.createElement("img");
         img.src = `https://drive.google.com/thumbnail?id=${match.image_id}`;
         img.alt = "";
         img.loading = "lazy";
         img.classList.add("fade-in");
 
+        // Se desejar, você pode adicionar um clique na imagem para abrir o link completo:
+        // img.onclick = (e) => {
+        //     e.stopPropagation();
+        //     window.open(`https://drive.google.com/uc?id=${match.image_id}&export=download`, "_blank");
+        // };
+
         // Cria a bolinha de seleção
         const selectionCircle = document.createElement("div");
         selectionCircle.classList.add("selection-circle");
 
-        // Quando clicar no container, alterna a classe "selected"
+        // Ao clicar no container, alterna o estado selecionado
         container.addEventListener("click", function(e) {
-            // Evita conflito se precisar tratar outros cliques
             container.classList.toggle("selected");
         });
 
@@ -291,6 +300,7 @@ function displayMatchingImages(matches) {
 
     console.log("Imagens similares carregadas!");
 }
+
 
 
 // Carrega os álbuns *apenas se não estiver sendo carregado*
@@ -388,42 +398,47 @@ document.getElementById("download-selected-btn").addEventListener("click", async
     }
     if (selectedContainers.length === 1) {
         // Se só uma foto estiver selecionada, baixa direto
-        const img = selectedContainers[0].querySelector("img");
-        if (img && img.src) {
-            window.location.href = img.src;
+        const fileId = selectedContainers[0].dataset.fileId;
+        if (fileId) {
+            downloadFileBlob(fileId)
+                .then(blob => {
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement("a");
+                    link.href = url;
+                    link.download = "foto.jpg";
+                    link.click();
+                })
+                .catch(err => console.error(err));
         }
     } else {
         // Se 2 ou mais, cria um ZIP com todas as imagens
         const zip = new JSZip();
         const folder = zip.folder("fotos_selecionadas");
-
-        // Array de promises pra baixar cada imagem
-        const fetchPromises = [];
+        const downloadPromises = [];
+        
         selectedContainers.forEach((container, index) => {
-            const img = container.querySelector("img");
-            if (img && img.src) {
-                fetchPromises.push(
-                    fetch(img.src)
-                        .then(response => response.blob())
-                        .then(blob => {
-                            folder.file(`foto${index+1}.jpg`, blob);
-                        })
-                );
+            const fileId = container.dataset.fileId;
+            if (fileId) {
+                const promise = downloadFileBlob(fileId)
+                    .then(blob => {
+                        folder.file(`foto${index + 1}.jpg`, blob);
+                    })
+                    .catch(err => console.error("Erro ao baixar arquivo", err));
+                downloadPromises.push(promise);
             }
         });
-
-        Promise.all(fetchPromises).then(() => {
-            zip.generateAsync({ type: "blob" })
-                .then(function(content) {
-                    // Cria um link temporário e dispara o download
-                    const link = document.createElement("a");
-                    link.href = URL.createObjectURL(content);
-                    link.download = "fotos_selecionadas.zip";
-                    link.click();
-                });
+        
+        Promise.all(downloadPromises).then(() => {
+            zip.generateAsync({ type: "blob" }).then(function(content) {
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(content);
+                link.download = "fotos_selecionadas.zip";
+                link.click();
+            });
         });
     }
 });
+
 
 // Função para inicializar o gapi client
 function initClient() {
@@ -488,15 +503,25 @@ function criarZipComImagens(fileIds) {
     });
 }
 
-
-
-
-
-
-
-
-
-
+function downloadFileBlob(fileId) {
+    return new Promise((resolve, reject) => {
+        const accessToken = gapi.auth2.getAuthInstance()
+            .currentUser.get().getAuthResponse().access_token;
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', 'https://www.googleapis.com/drive/v3/files/' + fileId + '?alt=media');
+        xhr.setRequestHeader('Authorization', 'Bearer ' + accessToken);
+        xhr.responseType = 'blob';
+        xhr.onload = () => {
+            if (xhr.status === 200) {
+                resolve(xhr.response);
+            } else {
+                reject(new Error('Erro ao baixar arquivo: ' + xhr.status));
+            }
+        };
+        xhr.onerror = () => reject(new Error('Erro na requisição.'));
+        xhr.send();
+    });
+}
 
 
 // Expõe funções globalmente para evitar erro "loadAlbums is not defined"
