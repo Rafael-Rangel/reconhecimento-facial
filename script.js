@@ -331,21 +331,28 @@ async function loadAlbums() {
       title.innerText = album.name;
 
       // Imagem de capa (inicialmente um loader ou placeholder)
-     const coverImg = document.createElement("img");
-coverImg.style.borderRadius = "5px";
-coverImg.style.width = "100%";
-coverImg.style.height = "200px";
-coverImg.style.objectFit = "cover";
-coverImg.style.transition = "transform 0.3s ease";
-coverImg.alt = "Capa do Álbum";
+      const coverImg = document.createElement("img");
+      coverImg.style.borderRadius = "5px";
+      coverImg.style.width = "100%";
+      coverImg.style.height = "200px";
+      coverImg.style.objectFit = "cover";
+      coverImg.style.transition = "transform 0.3s ease";
+      coverImg.alt = "Capa do Álbum";
 
-coverImg.addEventListener("mouseenter", () => {
-  coverImg.style.transform = "scale(1.05)";
-});
-coverImg.addEventListener("mouseleave", () => {
-  coverImg.style.transform = "scale(1)";
-});
+      coverImg.addEventListener("mouseenter", () => {
+        coverImg.style.transform = "scale(1.05)";
+      });
+      coverImg.addEventListener("mouseleave", () => {
+        coverImg.style.transform = "scale(1)";
+      });
 
+      // Adiciona onload para remover o loader assim que a imagem for carregada
+      coverImg.onload = () => {
+        const loader = albumContainer.querySelector(".loader");
+        if (loader) {
+          loader.remove();
+        }
+      };
 
       // Busca as imagens do álbum
       try {
@@ -357,7 +364,7 @@ coverImg.addEventListener("mouseleave", () => {
         const imagesData = await resImages.json();
 
         if (Array.isArray(imagesData.images)) {
-          // Ajuste aqui: usamos startsWith("fotocapa") pra ignorar extensões
+          // Usamos startsWith("fotocapa") pra ignorar extensões
           const fotoCapa = imagesData.images.find(img =>
             img.name.toLowerCase().startsWith("fotocapa")
           );
@@ -365,14 +372,12 @@ coverImg.addEventListener("mouseleave", () => {
           if (fotoCapa) {
             coverImg.src = `https://drive.google.com/thumbnail?id=${fotoCapa.id}`;
           } else {
-            // Caso não tenha a "FotoCapa", exibe um placeholder
             coverImg.src = "https://placehold.co/300x200?text=Sem+Capa";
           }
         } else {
           coverImg.src = "https://placehold.co/300x200?text=Sem+Capa";
         }
       } catch (error) {
-        // Se der erro, coloca um placeholder
         console.error("Erro ao buscar capa:", error);
         coverImg.src = "https://placehold.co/300x200?text=Erro+Capa";
       }
@@ -394,13 +399,15 @@ coverImg.addEventListener("mouseleave", () => {
   } catch (error) {
     console.error("Erro ao carregar álbuns:", error);
     albumContainer.innerHTML = "<p style=' color: #e01f34; width: 100vw; text-align: center;'>Erro ao carregar os álbuns. Tente novamente mais tarde.</p>";
-} finally {
-  isLoadingAlbums = false;
-  if (albumContainer.querySelector(".loader")) {
-    albumContainer.querySelector(".loader").remove();
+  } finally {
+    isLoadingAlbums = false;
+    // Se por algum motivo o loader ainda existir, remova-o
+    if (albumContainer.querySelector(".loader")) {
+      albumContainer.querySelector(".loader").remove();
+    }
   }
 }
-}
+
 
 
 // Inicia o carregamento ao abrir a página somente se for necessário
