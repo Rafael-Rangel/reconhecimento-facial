@@ -350,6 +350,59 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
+// Botão para selecionar todas as fotos
+document.getElementById("select-all-btn").addEventListener("click", function() {
+    const containers = document.querySelectorAll(".photo-container");
+    containers.forEach(container => container.classList.add("selected"));
+});
+
+// Botão para baixar fotos selecionadas
+document.getElementById("download-selected-btn").addEventListener("click", async function() {
+    const selectedContainers = document.querySelectorAll(".photo-container.selected");
+    if (selectedContainers.length === 0) {
+        alert("Nenhuma foto selecionada!");
+        return;
+    }
+    if (selectedContainers.length === 1) {
+        // Se só uma foto estiver selecionada, baixa direto
+        const img = selectedContainers[0].querySelector("img");
+        if (img && img.src) {
+            window.location.href = img.src;
+        }
+    } else {
+        // Se 2 ou mais, cria um ZIP com todas as imagens
+        const zip = new JSZip();
+        const folder = zip.folder("fotos_selecionadas");
+
+        // Array de promises pra baixar cada imagem
+        const fetchPromises = [];
+        selectedContainers.forEach((container, index) => {
+            const img = container.querySelector("img");
+            if (img && img.src) {
+                fetchPromises.push(
+                    fetch(img.src)
+                        .then(response => response.blob())
+                        .then(blob => {
+                            folder.file(`foto${index+1}.jpg`, blob);
+                        })
+                );
+            }
+        });
+
+        Promise.all(fetchPromises).then(() => {
+            zip.generateAsync({ type: "blob" })
+                .then(function(content) {
+                    // Cria um link temporário e dispara o download
+                    const link = document.createElement("a");
+                    link.href = URL.createObjectURL(content);
+                    link.download = "fotos_selecionadas.zip";
+                    link.click();
+                });
+        });
+    }
+});
+
+
 // Expõe funções globalmente para evitar erro "loadAlbums is not defined"
 window.loadAlbums = loadAlbums;
 window.refreshAlbum = refreshAlbum;
