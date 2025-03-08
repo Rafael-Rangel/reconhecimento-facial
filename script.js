@@ -313,8 +313,6 @@ async function loadAlbums() {
     const data = await response.json();
     console.log("Álbuns recebidos:", data);
 
-   
-
     if (!Array.isArray(data.folders) || data.folders.length === 0) {
       console.warn("⚠️ Nenhum álbum encontrado!");
       albumContainer.innerHTML = "<p style='width: 100vw; text-align: center;'>Nenhum álbum disponível.</p>";
@@ -386,9 +384,8 @@ async function loadAlbums() {
 
       // Após o primeiro álbum ser carregado, remova o loader
       if (!firstAlbumLoaded) {
-        isLoadingAlbums = false;
-        albumContainer.classList.remove("loading");
         firstAlbumLoaded = true;  // Marca que o primeiro álbum foi carregado
+        albumContainer.classList.remove("loading");  // Remove o loader
       }
     }
 
