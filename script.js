@@ -302,7 +302,7 @@ async function loadAlbums() {
 
   try {
     console.log("Buscando álbuns...");
-    const response = await fetch('${API_URL}/main/folders');
+    const response = await fetch(`${API_URL}/main/folders`);
 
     if (!response.ok) {
       console.warn('ALERTA: Erro na API: ${response.status}');
