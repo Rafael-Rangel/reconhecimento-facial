@@ -186,6 +186,12 @@ async function uploadSelfie() {
         return;
     }
 
+    // Mostra o loader e remove as fotos atuais
+    const gallery = document.getElementById("image-gallery");
+    if (gallery) {
+        gallery.innerHTML = '<div class="loader"></div>';
+    }
+
     try {
         console.log("Enviando selfie para comparação...");
         const formData = new FormData();
@@ -199,6 +205,7 @@ async function uploadSelfie() {
         if (!response.ok) {
             console.error("Erro ao enviar selfie:", response.status);
             alert("Erro ao enviar selfie. Tente novamente.");
+            if (gallery) gallery.innerHTML = "";
             return;
         }
 
@@ -207,15 +214,17 @@ async function uploadSelfie() {
 
         if (!data.matches || data.matches.length === 0) {
             console.warn("⚠️ Nenhuma imagem similar encontrada.");
-            document.getElementById("image-gallery").innerHTML = "<p>Nenhuma correspondência encontrada.</p>";
+            if (gallery) gallery.innerHTML = "<p>Nenhuma correspondência encontrada.</p>";
             return;
         }
 
         displayMatchingImages(data.matches);
     } catch (error) {
         console.error("Erro ao enviar selfie:", error);
+        if (gallery) gallery.innerHTML = "<p>Erro ao processar sua imagem. Tente novamente mais tarde.</p>";
     }
 }
+
 
 // Exibe os rostos mais similares encontrados
 function displayMatchingImages(matches) {
