@@ -400,7 +400,7 @@ coverImg.addEventListener("mouseleave", () => {
     albumContainer.querySelector(".loader").remove();
   }
 }
-
+}
 
 
 // Inicia o carregamento ao abrir a página somente se for necessário
