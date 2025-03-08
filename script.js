@@ -166,16 +166,17 @@ function displayImages(images) {
     circle.classList.add("selection-circle");
     // Ao clicar no container, alterna a seleção
     container.onclick = (e) => {
-      // Evita que o clique na imagem abra a foto
-      if (e.target !== container) return;
-      container.classList.toggle("selected");
-      const isSelected = container.classList.contains("selected");
-      if (isSelected) {
-        selectedImages.push(image.id);
-      } else {
-        selectedImages = selectedImages.filter(id => id !== image.id);
-      }
-    };
+  // Se o alvo não for o container e nem a bolinha, sai.
+  if (e.target !== container && !e.target.classList.contains("selection-circle")) return;
+
+  container.classList.toggle("selected");
+  const isSelected = container.classList.contains("selected");
+  if (isSelected) {
+    selectedImages.push(image.id);
+  } else {
+    selectedImages = selectedImages.filter(id => id !== image.id);
+  }
+};
 
     container.appendChild(img);
     container.appendChild(circle);
