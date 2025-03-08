@@ -425,6 +425,79 @@ document.getElementById("download-selected-btn").addEventListener("click", async
     }
 });
 
+// Função para inicializar o gapi client
+function initClient() {
+    gapi.client.init({
+        clientId: '798820518733-4d1kk05g0vtl1hfnnfere4i5kv3uafbb.apps.googleusercontent.com',
+        scope: 'https://www.googleapis.com/auth/drive.readonly',
+        discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest']
+    }).then(function () {
+        // Verifica se o usuário está logado
+        if (!gapi.auth2.getAuthInstance().isSignedIn.get()) {
+            gapi.auth2.getAuthInstance().signIn();
+        }
+    }, function(error) {
+        console.error('Erro ao inicializar o gapi:', error);
+    });
+}
+
+// Carrega a biblioteca e inicia o client
+function handleClientLoad() {
+    gapi.load('client:auth2', initClient);
+}
+
+
+// Função para baixar o conteúdo de um arquivo (imagem)
+function downloadFile(fileId) {
+    return gapi.client.drive.files.get({
+        fileId: fileId,
+        alt: 'media'
+    }).then(function(response) {
+        // Retorna os dados do arquivo
+        return response.body;
+    }, function(error) {
+        console.error('Erro ao baixar o arquivo:', error);
+    });
+}
+function criarZipComImagens(fileIds) {
+    const zip = new JSZip();
+    const folder = zip.folder("fotos_selecionadas");
+    const promises = [];
+
+    fileIds.forEach((id, index) => {
+        const prom = gapi.client.drive.files.get({
+            fileId: id,
+            alt: 'media'
+        }).then(response => {
+            // Aqui, você precisará converter a resposta para blob
+            // Isso pode variar conforme a resposta retornada pelo gapi
+            const blob = new Blob([response.body], { type: 'image/jpeg' });
+            folder.file(`foto${index + 1}.jpg`, blob);
+        });
+        promises.push(prom);
+    });
+
+    Promise.all(promises).then(() => {
+        zip.generateAsync({ type: 'blob' }).then(function(content) {
+            // Cria um link temporário para download
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(content);
+            link.download = "fotos_selecionadas.zip";
+            link.click();
+        });
+    });
+}
+
+
+
+
+
+
+
+
+
+
+
 
 // Expõe funções globalmente para evitar erro "loadAlbums is not defined"
 window.loadAlbums = loadAlbums;
