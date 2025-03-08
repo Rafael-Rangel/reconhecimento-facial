@@ -230,7 +230,8 @@ async function uploadSelfie() {
 function displayMatchingImages(matches) {
     const gallery = document.getElementById("image-gallery");
     if (!gallery) return;
-
+    
+    gallery.innerHTML = "<h3>Imagens Similares Encontradas:</h3>";
 
     if (!Array.isArray(matches) || matches.length === 0) {
         console.warn("⚠️ Nenhuma imagem similar encontrada.");
