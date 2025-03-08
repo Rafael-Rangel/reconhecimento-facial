@@ -264,30 +264,39 @@ async function uploadSelfie() {
 
 // Exibe os rostos mais similares encontrados
 function displayMatchingImages(matches) {
-    const gallery = document.getElementById("image-gallery");
-    if (!gallery) return;
+  const gallery = document.getElementById("image-gallery");
+  if (!gallery) return;
 
-    gallery.innerHTML = ""; // Limpa a galeria
+  gallery.innerHTML = ""; // Limpa a galeria
+  imageMap = {}; // Resetando o mapa de imagens
+  selectedImages = []; // Resetando as imagens selecionadas
 
-    if (!Array.isArray(matches) || matches.length === 0) {
-        console.warn("⚠️ Nenhuma imagem similar encontrada.");
-        gallery.innerHTML = "<p>Nenhuma imagem correspondente.</p>";
-        return;
-    }
+  if (!Array.isArray(matches) || matches.length === 0) {
+    console.warn("⚠️ Nenhuma imagem similar encontrada.");
+    gallery.innerHTML = "<p>Nenhuma imagem correspondente.</p>";
+    return;
+  }
 
-    matches.forEach(match => {
-        const img = document.createElement("img");
-       img.src = `https://drive.google.com/thumbnail?id=${match.image_id}`;
-        img.alt = ""; // Sem texto de similaridade
-        img.loading = "lazy";
-        img.classList.add("fade-in");
-        img.onclick = () => window.open(`https://drive.google.com/uc?id=${match.image_id}&export=download`, "_blank");
+  matches.forEach(match => {
+    const img = document.createElement("img");
+    img.src = `https://drive.google.com/thumbnail?id=${match.image_id}`;
+    img.alt = ""; // Sem texto de similaridade
+    img.loading = "lazy";  // Lazy load
+    img.classList.add("fade-in");
 
-        gallery.appendChild(img);
-    });
+    // Evento para quando a imagem for carregada
+    img.onload = () => {
+      checkAndRemoveLoader(); // Remove o loader quando a imagem carregar
+    };
 
-    console.log("Imagens similares carregadas!");
+    img.onclick = () => window.open(`https://drive.google.com/uc?id=${match.image_id}&export=download`, "_blank");
+
+    gallery.appendChild(img);
+  });
+
+  console.log("Imagens similares carregadas!");
 }
+
 
 
 function checkAndRemoveLoader() {
