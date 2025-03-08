@@ -273,7 +273,7 @@ function displayMatchingImages(matches) {
 
         // Cria a imagem usando a URL da API
         const img = document.createElement("img");
-        img.src = `${API_URL}/api/images/${match.image_id}`;  // Aqui usamos o endpoint da sua API
+        img.src = `${API_URL}/api/images/${match.image_id}`;
         img.alt = "";
         img.loading = "lazy";
         img.classList.add("fade-in");
@@ -294,7 +294,6 @@ function displayMatchingImages(matches) {
 
     console.log("Imagens similares carregadas!");
 }
-
 
 
 
@@ -515,7 +514,6 @@ function downloadFileBlob(fileId) {
         xhr.send();
     });
 }
-
 
 
 // Expõe funções globalmente para evitar erro "loadAlbums is not defined"
