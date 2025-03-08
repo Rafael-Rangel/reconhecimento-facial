@@ -399,14 +399,18 @@ async function downloadSelectedImages(selectedIds) {
 
   for (let i = 0; i < selectedIds.length; i++) {
     const id = selectedIds[i];
-    const url = `https://drive.google.com/thumbnail?id=${id}`;
+    // Monta a URL original do Drive
+    const driveUrl = `https://drive.google.com/thumbnail?id=${id}`;
+    // Monta a URL do proxy (substitua com o domínio real do seu proxy)
+    const proxyUrl = `https://reconhecimento-facial-kappa.vercel.app/proxy?url=${encodeURIComponent(driveUrl)}`;
+    
     try {
-      const response = await fetch(url);
+      const response = await fetch(proxyUrl);
       const blob = await response.blob();
       const fileName = `imagem_${i + 1}.jpg`;
       imgFolder.file(fileName, blob);
     } catch (error) {
-      console.error("Erro ao baixar a imagem:", url, error);
+      console.error("Erro ao baixar a imagem:", driveUrl, error);
     }
   }
 
@@ -419,6 +423,7 @@ async function downloadSelectedImages(selectedIds) {
     document.body.removeChild(a);
   });
 }
+
 
 
 // Expõe funções globalmente para evitar erro "loadAlbums is not defined"
