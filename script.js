@@ -285,61 +285,108 @@ function displayMatchingImages(matches) {
 
 // Carrega os álbuns apenas se não estiver sendo carregado
 async function loadAlbums() {
-    if (isLoadingAlbums) {
-        console.warn("⚠️ Já está carregando os álbuns! Ignorando nova chamada.");
-        return;
+  if (isLoadingAlbums) {
+    console.warn("⚠️ Já está carregando os álbuns! Ignorando nova chamada.");
+    return;
+  }
+  isLoadingAlbums = true;
+
+  const albumContainer = document.getElementById("album-container");
+  if (!albumContainer) {
+    console.warn("⚠️ Página sem #album-container, pulando carregamento de álbuns.");
+    return;
+  }
+  // Mostra o loader
+  albumContainer.classList.add("loading");
+  albumContainer.innerHTML = '<div class="loader"></div>';
+
+  try {
+    console.log("Buscando álbuns...");
+    const response = await fetch(`${API_URL}/main/folders`);
+
+    if (!response.ok) {
+      console.warn(`ALERTA: Erro na API: ${response.status}`);
+      throw new Error("Erro ao carregar álbuns.");
     }
-    isLoadingAlbums = true;
 
-    const albumContainer = document.getElementById("album-container");
-    if (!albumContainer) {
-        console.warn("⚠️ Página sem #album-container, pulando carregamento de álbuns.");
-        return;
+    const data = await response.json();
+    console.log("Álbuns recebidos:", data);
+
+    albumContainer.innerHTML = "";
+
+    if (!Array.isArray(data.folders) || data.folders.length === 0) {
+      console.warn("⚠️ Nenhum álbum encontrado!");
+      albumContainer.innerHTML = "<p style='width: 100vw; text-align: center;'>Nenhum álbum disponível.</p>";
+      return;
     }
-    // Mostra o loader
-    albumContainer.classList.add("loading");
-    albumContainer.innerHTML = '<div class="loader"></div>';
 
-    try {
-        console.log("Buscando álbuns...");
-        const response = await fetch(`${API_URL}/main/folders`);
+    // Para cada álbum, cria um card e puxa apenas a foto "FotoCapa"
+    for (const album of data.folders) {
+      // Cria o card do álbum
+      const albumCard = document.createElement("div");
+      albumCard.classList.add("album-card");
 
+      // Título do álbum
+      const title = document.createElement("h3");
+      title.innerText = album.name;
 
-        if (!response.ok) {
-            console.warn(`ALERTA: Erro na API: ${response.status}`);
-            throw new Error("Erro ao carregar álbuns.");
+      // Imagem de capa (inicialmente um loader ou placeholder)
+      const coverImg = document.createElement("img");
+      coverImg.style.borderRadius = "5px";
+      coverImg.style.width = "100%";
+      coverImg.style.height = "auto";
+      coverImg.alt = "Capa do Álbum";
+
+      // Busca as imagens do álbum
+      try {
+        const resImages = await fetch(`${API_URL}/albums/${album.id}/images`);
+        if (!resImages.ok) {
+          console.warn(`Erro ao buscar imagens do álbum ${album.id}`);
+          throw new Error("Erro ao carregar imagens do álbum.");
         }
+        const imagesData = await resImages.json();
 
-        const data = await response.json();
-        console.log("Álbuns recebidos:", data);
-
-        albumContainer.innerHTML = "";
-
-        if (!Array.isArray(data.folders) || data.folders.length === 0) {
-            console.warn("⚠️ Nenhum álbum encontrado!");
-            albumContainer.innerHTML = "<p style='width: 100vw; text-align: center;'>Nenhum álbum disponível.</p>";
-            return;
+        if (Array.isArray(imagesData.images)) {
+          // Procura pela imagem que tenha nome "FotoCapa" (ajuste se o nome for diferente)
+          const fotoCapa = imagesData.images.find(img => img.name.toLowerCase() === "fotocapa");
+          if (fotoCapa) {
+            coverImg.src = `https://drive.google.com/thumbnail?id=${fotoCapa.id}`;
+          } else {
+            // Caso não tenha a "FotoCapa", exibe um placeholder
+            coverImg.src = "https://via.placeholder.com/300x200?text=Sem+Capa";
+          }
+        } else {
+          coverImg.src = "https://via.placeholder.com/300x200?text=Sem+Capa";
         }
+      } catch (error) {
+        // Se der erro, coloca um placeholder
+        console.error("Erro ao buscar capa:", error);
+        coverImg.src = "https://via.placeholder.com/300x200?text=Erro+Capa";
+      }
 
-        data.folders.forEach(album => {
-            const albumCard = document.createElement("div");
-            albumCard.classList.add("album-card");
-            albumCard.innerText = album.name;
-            albumCard.onclick = () => window.location.href = `album.html?album=${album.id}`;
+      // Ao clicar no card, vai pro álbum
+      albumCard.onclick = () => {
+        window.location.href = `album.html?album=${album.id}`;
+      };
 
+      // Monta o card
+      albumCard.appendChild(coverImg);
+      albumCard.appendChild(title);
 
-            albumContainer.appendChild(albumCard);
-        });
-
-        console.log("Álbuns exibidos com sucesso!");
-    } catch (error) {
-        console.error("Erro ao carregar álbuns:", error);
-        albumContainer.innerHTML = "<p style=' color: #e01f34; width: 100vw; text-align: center;'>Erro ao carregar os álbuns. Tente novamente mais tarde.</p>";
-    } finally {
-        isLoadingAlbums = false;
-        albumContainer.classList.remove("loading");
+      // Adiciona ao container
+      albumContainer.appendChild(albumCard);
     }
+
+    console.log("Álbuns exibidos com capa!");
+  } catch (error) {
+    console.error("Erro ao carregar álbuns:", error);
+    albumContainer.innerHTML = "<p style=' color: #e01f34; width: 100vw; text-align: center;'>Erro ao carregar os álbuns. Tente novamente mais tarde.</p>";
+  } finally {
+    isLoadingAlbums = false;
+    albumContainer.classList.remove("loading");
+  }
 }
+
 
 // Inicia o carregamento ao abrir a página somente se for necessário
 document.addEventListener("DOMContentLoaded", () => {
