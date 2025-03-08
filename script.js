@@ -384,7 +384,7 @@ async function loadAlbums() {
       // Adiciona ao container
       albumContainer.appendChild(albumCard);
 
-      // Remover o loader após o primeiro álbum ser exibido
+      // Após o primeiro álbum ser carregado, remova o loader
       if (!firstAlbumLoaded) {
         isLoadingAlbums = false;
         albumContainer.classList.remove("loading");
@@ -398,6 +398,7 @@ async function loadAlbums() {
     albumContainer.innerHTML = "<p style=' color: #e01f34; width: 100vw; text-align: center;'>Erro ao carregar os álbuns. Tente novamente mais tarde.</p>";
   }
 }
+
 
 // Inicia o carregamento ao abrir a página somente se for necessário
 document.addEventListener("DOMContentLoaded", () => {
