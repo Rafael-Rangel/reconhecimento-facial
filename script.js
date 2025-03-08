@@ -231,7 +231,6 @@ function displayMatchingImages(matches) {
     const gallery = document.getElementById("image-gallery");
     if (!gallery) return;
 
-    gallery.innerHTML = "<h3>Imagens Similares Encontradas:</h3>";
 
     if (!Array.isArray(matches) || matches.length === 0) {
         console.warn("⚠️ Nenhuma imagem similar encontrada.");
@@ -247,8 +246,7 @@ function displayMatchingImages(matches) {
         img.classList.add("fade-in");
         img.onclick = () => window.open(`https://drive.google.com/uc?id=${match.image_id}&export=download`, "_blank");
 
-        const info = document.createElement("p");
-        info.innerText = `Similaridade: ${match.similarity.toFixed(2)}%`;
+       
 
         gallery.appendChild(img);
         gallery.appendChild(info);
