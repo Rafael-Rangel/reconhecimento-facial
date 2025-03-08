@@ -154,7 +154,7 @@ function displayImages(images) {
         // Cria a imagem
         const img = document.createElement("img");
         // Exibe a miniatura (thumbnail)
-        img.src = `https://drive.google.com/thumbnail?id=${image.id}`;
+        img.src = `${API_URL}/api/images/${image.id}`;
         img.alt = image.name;
         img.loading = "lazy";
         img.classList.add("fade-in");
@@ -268,21 +268,15 @@ function displayMatchingImages(matches) {
         // Cria o container para a foto
         const container = document.createElement("div");
         container.classList.add("photo-container");
-        // Armazena o fileId para download via gapi
+        // Armazena o fileId para uso no download
         container.dataset.fileId = match.image_id;
 
-        // Cria a imagem usando a URL da thumbnail do Drive
+        // Cria a imagem usando a URL da API
         const img = document.createElement("img");
-        img.src = `https://drive.google.com/thumbnail?id=${match.image_id}`;
+        img.src = `${API_URL}/api/images/${match.image_id}`;  // Aqui usamos o endpoint da sua API
         img.alt = "";
         img.loading = "lazy";
         img.classList.add("fade-in");
-
-        // Se desejar, você pode adicionar um clique na imagem para abrir o link completo:
-        // img.onclick = (e) => {
-        //     e.stopPropagation();
-        //     window.open(`https://drive.google.com/uc?id=${match.image_id}&export=download`, "_blank");
-        // };
 
         // Cria a bolinha de seleção
         const selectionCircle = document.createElement("div");
@@ -300,6 +294,7 @@ function displayMatchingImages(matches) {
 
     console.log("Imagens similares carregadas!");
 }
+
 
 
 
@@ -505,11 +500,9 @@ function criarZipComImagens(fileIds) {
 
 function downloadFileBlob(fileId) {
     return new Promise((resolve, reject) => {
-        const accessToken = gapi.auth2.getAuthInstance()
-            .currentUser.get().getAuthResponse().access_token;
         const xhr = new XMLHttpRequest();
-        xhr.open('GET', 'https://www.googleapis.com/drive/v3/files/' + fileId + '?alt=media');
-        xhr.setRequestHeader('Authorization', 'Bearer ' + accessToken);
+        // Usa o endpoint da API para baixar o arquivo
+        xhr.open('GET', `${API_URL}/api/images/${fileId}`);
         xhr.responseType = 'blob';
         xhr.onload = () => {
             if (xhr.status === 200) {
@@ -522,6 +515,7 @@ function downloadFileBlob(fileId) {
         xhr.send();
     });
 }
+
 
 
 // Expõe funções globalmente para evitar erro "loadAlbums is not defined"
