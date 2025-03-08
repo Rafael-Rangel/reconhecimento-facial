@@ -101,7 +101,7 @@ async function refreshAlbum(albumId, forceUpdate = false) {
             displayImages(data.images);
         } else {
             console.warn("⚠️ Nenhuma imagem encontrada.");
-            gallery.innerHTML = "<p>Nenhuma imagem disponível.</p>";
+            gallery.innerHTML = "<p style='width: 100vw; text-align: center;'>Nenhuma imagem disponível.</p>";
         }
     } catch (error) {
         console.error("Erro ao atualizar o álbum:", error);
