@@ -82,7 +82,7 @@ async function refreshAlbum(albumId, forceUpdate = false) {
             if (response.status === 404) {
                 isAlbumDeleted = true; // Marca que o álbum foi excluído
 
-                gallery.innerHTML = `<p style="color: red;">Este álbum foi excluído ou não existe.</p>`;
+                gallery.innerHTML = `<p style=" color: #e01f34; width: 100vw;text-align: center;color: #e01f34;">Este álbum foi excluído ou não existe.</p>`;
 
                 setTimeout(() => {
                     window.location.href = "index.html"; // Redireciona para a página inicial
@@ -92,7 +92,7 @@ async function refreshAlbum(albumId, forceUpdate = false) {
             }
 
             throw new Error(`Erro ao carregar álbum (Status: ${response.status})`);
-        }
+        } 
 
         let data = await response.json();
 
@@ -101,13 +101,13 @@ async function refreshAlbum(albumId, forceUpdate = false) {
             displayImages(data.images);
         } else {
             console.warn("⚠️ Nenhuma imagem encontrada.");
-            gallery.innerHTML = "<p style='width: 100vw; text-align: center;'>Nenhuma imagem disponível.</p>";
+            gallery.innerHTML = "<p style='color: #e01f34; width: 100vw; text-align: center;'>Nenhuma imagem disponível.</p>";
         }
     } catch (error) {
         console.error("Erro ao atualizar o álbum:", error);
         const gallery = document.getElementById("image-gallery");
         if (gallery) {
-            gallery.innerHTML = "<p style='width: 100vw; text-align: center;'>Erro ao carregar as imagens. Tente novamente mais tarde.</p>";
+            gallery.innerHTML = "<p style='color: #e01f34; width: 100vw; text-align: center;'>Erro ao carregar as imagens. Tente novamente mais tarde.</p>";
         }
     } finally {
         isProcessing = false;
@@ -214,14 +214,14 @@ async function uploadSelfie() {
 
         if (!data.matches || data.matches.length === 0) {
             console.warn("⚠️ Nenhuma imagem similar encontrada.");
-            if (gallery) gallery.innerHTML = "<p style='width: 100vw; text-align: center;'>Nenhuma correspondência encontrada.</p>";
+            if (gallery) gallery.innerHTML = "<p style='color: #e01f34; width: 100vw; text-align: center;'>Nenhuma correspondência encontrada.</p>";
             return;
         }
 
         displayMatchingImages(data.matches);
     } catch (error) {
         console.error("Erro ao enviar selfie:", error);
-        if (gallery) gallery.innerHTML = "<p style='width: 100vw; text-align: center;'>Erro ao processar sua imagem. Tente novamente mais tarde.</p>";
+        if (gallery) gallery.innerHTML = "<p style=' color: #e01f34; width: 100vw; text-align: center;'>Erro ao processar sua imagem. Tente novamente mais tarde.</p>";
     }
 }
 
@@ -235,7 +235,7 @@ function displayMatchingImages(matches) {
 
     if (!Array.isArray(matches) || matches.length === 0) {
         console.warn("⚠️ Nenhuma imagem similar encontrada.");
-        gallery.innerHTML += "<p style='width: 100vw; text-align: center;'>Nenhuma imagem correspondente.</p>";
+        gallery.innerHTML += "<p style=' color: #e01f34;width: 100vw; text-align: center;'>Nenhuma imagem correspondente.</p>";
         return;
     }
 
@@ -306,7 +306,7 @@ async function loadAlbums() {
         console.log("Álbuns exibidos com sucesso!");
     } catch (error) {
         console.error("Erro ao carregar álbuns:", error);
-        albumContainer.innerHTML = "<p style='width: 100vw; text-align: center;'>Erro ao carregar os álbuns. Tente novamente mais tarde.</p>";
+        albumContainer.innerHTML = "<p style=' color: #e01f34; width: 100vw; text-align: center;'>Erro ao carregar os álbuns. Tente novamente mais tarde.</p>";
     } finally {
         isLoadingAlbums = false;
         albumContainer.classList.remove("loading");
