@@ -240,14 +240,30 @@ function displayMatchingImages(matches) {
     }
 
     matches.forEach(match => {
+        // Cria um container pra cada foto
+        const container = document.createElement("div");
+        container.classList.add("photo-container");
+
+        // Cria a imagem
         const img = document.createElement("img");
         img.src = `https://drive.google.com/thumbnail?id=${match.image_id}`;
-        img.alt = ""; // Sem texto de similaridade
+        img.alt = "";
         img.loading = "lazy";
         img.classList.add("fade-in");
-        img.onclick = () => window.open(`https://drive.google.com/uc?id=${match.image_id}&export=download`, "_blank");
 
-        gallery.appendChild(img);
+        // Cria a bolinha de seleção
+        const selectionCircle = document.createElement("div");
+        selectionCircle.classList.add("selection-circle");
+
+        // Quando clicar no container, alterna a classe "selected"
+        container.addEventListener("click", function(e) {
+            // Evita conflito se precisar tratar outros cliques
+            container.classList.toggle("selected");
+        });
+
+        container.appendChild(img);
+        container.appendChild(selectionCircle);
+        gallery.appendChild(container);
     });
 
     console.log("Imagens similares carregadas!");
