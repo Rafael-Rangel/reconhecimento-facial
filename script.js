@@ -145,18 +145,41 @@ function displayImages(images) {
     images.forEach(image => {
         imageMap[image.id] = image.name;
 
+        // Cria o container pra foto
+        const container = document.createElement("div");
+        container.classList.add("photo-container");
+
+        // Cria a imagem
         const img = document.createElement("img");
         img.src = `https://drive.google.com/thumbnail?id=${image.id}`;
         img.alt = image.name;
         img.loading = "lazy";
         img.classList.add("fade-in");
-        img.onclick = () => window.open(image.url, "_blank");
 
-        gallery.appendChild(img);
+        // Quando clicar na imagem, abre o link completo
+        img.onclick = (e) => {
+            // Evita que o clique no container se repita
+            e.stopPropagation();
+            window.open(image.url, "_blank");
+        };
+
+        // Cria a bolinha de seleção
+        const selectionCircle = document.createElement("div");
+        selectionCircle.classList.add("selection-circle");
+
+        // Ao clicar no container, alterna o estado selecionado
+        container.addEventListener("click", function(e) {
+            container.classList.toggle("selected");
+        });
+
+        container.appendChild(img);
+        container.appendChild(selectionCircle);
+        gallery.appendChild(container);
     });
 
     console.log("Imagens carregadas com sucesso!");
 }
+
 
 // Envia selfie e busca rostos similares
 async function uploadSelfie() {
