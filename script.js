@@ -331,11 +331,21 @@ async function loadAlbums() {
       title.innerText = album.name;
 
       // Imagem de capa (inicialmente um loader ou placeholder)
-      const coverImg = document.createElement("img");
-      coverImg.style.borderRadius = "5px";
-      coverImg.style.width = "100%";
-      coverImg.style.height = "auto";
-      coverImg.alt = "Capa do Álbum";
+     const coverImg = document.createElement("img");
+coverImg.style.borderRadius = "5px";
+coverImg.style.width = "100%";
+coverImg.style.height = "200px";
+coverImg.style.objectFit = "cover";
+coverImg.style.transition = "transform 0.3s ease";
+coverImg.alt = "Capa do Álbum";
+
+coverImg.addEventListener("mouseenter", () => {
+  coverImg.style.transform = "scale(1.05)";
+});
+coverImg.addEventListener("mouseleave", () => {
+  coverImg.style.transform = "scale(1)";
+});
+
 
       // Busca as imagens do álbum
       try {
