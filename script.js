@@ -283,6 +283,24 @@ function displayMatchingImages(matches) {
 }
 
 
+
+function checkAndRemoveLoader() {
+  const albumContainer = document.getElementById("album-container");
+  const loader = albumContainer.querySelector(".loader");
+
+  // Verifica se há ao menos um album-card dentro do album-container
+  const albumCard = albumContainer.querySelector(".album-card");
+
+  if (albumCard) {
+    // Se existir ao menos um álbum, remove a classe de loading do loader
+    if (loader) {
+      loader.classList.remove("loading");
+      loader.style.display = "none"; // Pode adicionar para esconder visualmente
+    }
+  }
+}
+
+
 // Carrega os álbuns apenas se não estiver sendo carregado
 async function loadAlbums() {
   if (isLoadingAlbums) {
@@ -397,6 +415,11 @@ async function loadAlbums() {
   }
 }
 
+// Após adicionar o álbum ao albumContainer
+albumContainer.appendChild(albumCard);
+
+// Verifique se já há álbum e remova o loader
+checkAndRemoveLoader();
 
 
 // Inicia o carregamento ao abrir a página somente se for necessário
