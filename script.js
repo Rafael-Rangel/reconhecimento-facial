@@ -363,7 +363,7 @@ coverImg.addEventListener("mouseleave", () => {
           );
 
           if (fotoCapa) {
-            coverImg.src = 'https://drive.google.com/thumbnail?id=${fotoCapa.id}';
+            coverImg.src = `https://drive.google.com/thumbnail?id=${fotoCapa.id}`;
           } else {
             // Caso não tenha a "FotoCapa", exibe um placeholder
             coverImg.src = "https://placehold.co/300x200?text=Sem+Capa";
