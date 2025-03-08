@@ -156,8 +156,15 @@ function displayImages(images) {
     const img = document.createElement("img");
     img.src = `https://drive.google.com/thumbnail?id=${image.id}`;
     img.alt = image.name;
-    img.loading = "lazy";
+    img.loading = "lazy";  // Lazy load
     img.classList.add("fade-in");
+
+    // Evento para quando a imagem for carregada
+    img.onload = () => {
+      // Verifica se todas as imagens foram carregadas, se sim, remove o loader
+      checkAndRemoveLoader(); 
+    };
+
     // Clique duplo para abrir a imagem
     img.onclick = () => window.open(image.url, "_blank");
 
@@ -166,17 +173,16 @@ function displayImages(images) {
     circle.classList.add("selection-circle");
     // Ao clicar no container, alterna a seleção
     container.onclick = (e) => {
-  // Se o alvo não for o container e nem a bolinha, sai.
-  if (e.target !== container && !e.target.classList.contains("selection-circle")) return;
+      if (e.target !== container && !e.target.classList.contains("selection-circle")) return;
 
-  container.classList.toggle("selected");
-  const isSelected = container.classList.contains("selected");
-  if (isSelected) {
-    selectedImages.push(image.id);
-  } else {
-    selectedImages = selectedImages.filter(id => id !== image.id);
-  }
-};
+      container.classList.toggle("selected");
+      const isSelected = container.classList.contains("selected");
+      if (isSelected) {
+        selectedImages.push(image.id);
+      } else {
+        selectedImages = selectedImages.filter(id => id !== image.id);
+      }
+    };
 
     container.appendChild(img);
     container.appendChild(circle);
@@ -185,6 +191,7 @@ function displayImages(images) {
 
   console.log("Imagens carregadas com sucesso!");
 }
+
 
 // Envia selfie e busca rostos similares
 async function uploadSelfie() {
@@ -284,20 +291,19 @@ function displayMatchingImages(matches) {
 
 
 function checkAndRemoveLoader() {
-  const albumContainer = document.getElementById("album-container");
-  const loader = albumContainer.querySelector(".loader");
+  const gallery = document.getElementById("image-gallery");
+  const loader = gallery.querySelector(".loader");
 
-  // Verifica se há ao menos um album-card dentro do album-container
-  const albumCard = albumContainer.querySelector(".album-card");
+  // Verifica se há ao menos uma imagem carregada
+  const img = gallery.querySelector("img");
 
-  if (albumCard) {
-    // Se existir ao menos um álbum, remove a classe de loading do loader
+  if (img) {
     if (loader) {
-      loader.classList.remove("loading");
-      loader.style.display = "none"; // Pode adicionar para esconder visualmente
+      loader.style.display = "none"; // Remove o loader
     }
   }
 }
+
 
 // Carrega os álbuns apenas se não estiver sendo carregado
 async function loadAlbums() {
