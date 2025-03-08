@@ -284,6 +284,7 @@ function displayMatchingImages(matches) {
 
 
 // Carrega os álbuns apenas se não estiver sendo carregado
+// No final do código de loadAlbums
 async function loadAlbums() {
   if (isLoadingAlbums) {
     console.warn("⚠️ Já está carregando os álbuns! Ignorando nova chamada.");
@@ -296,7 +297,8 @@ async function loadAlbums() {
     console.warn("⚠️ Página sem #album-container, pulando carregamento de álbuns.");
     return;
   }
-  // Mostra o loader
+
+  // Mostra o loader inicialmente
   albumContainer.classList.add("loading");
   albumContainer.innerHTML = '<div class="loader"></div>';
 
@@ -312,7 +314,7 @@ async function loadAlbums() {
     const data = await response.json();
     console.log("Álbuns recebidos:", data);
 
-    albumContainer.innerHTML = "";
+    albumContainer.innerHTML = "";  // Limpa a galeria
 
     if (!Array.isArray(data.folders) || data.folders.length === 0) {
       console.warn("⚠️ Nenhum álbum encontrado!");
@@ -320,32 +322,32 @@ async function loadAlbums() {
       return;
     }
 
+    // Variável para verificar se o primeiro álbum foi carregado
+    let firstAlbumLoaded = false;
+
     // Para cada álbum, cria um card e puxa apenas a foto "FotoCapa"
     for (const album of data.folders) {
-      // Cria o card do álbum
       const albumCard = document.createElement("div");
       albumCard.classList.add("album-card");
 
-      // Título do álbum
       const title = document.createElement("h3");
       title.innerText = album.name;
 
-      // Imagem de capa (inicialmente um loader ou placeholder)
-     const coverImg = document.createElement("img");
-coverImg.style.borderRadius = "5px";
-coverImg.style.width = "100%";
-coverImg.style.height = "200px";
-coverImg.style.objectFit = "cover";
-coverImg.style.transition = "transform 0.3s ease";
-coverImg.alt = "Capa do Álbum";
+      const coverImg = document.createElement("img");
+      coverImg.style.borderRadius = "5px";
+      coverImg.style.width = "100%";
+      coverImg.style.height = "200px";
+      coverImg.style.objectFit = "cover";
+      coverImg.style.transition = "transform 0.3s ease";
+      coverImg.alt = "Capa do Álbum";
 
-coverImg.addEventListener("mouseenter", () => {
-  coverImg.style.transform = "scale(1.05)";
-});
-coverImg.addEventListener("mouseleave", () => {
-  coverImg.style.transform = "scale(1)";
-});
+      coverImg.addEventListener("mouseenter", () => {
+        coverImg.style.transform = "scale(1.05)";
+      });
 
+      coverImg.addEventListener("mouseleave", () => {
+        coverImg.style.transform = "scale(1)";
+      });
 
       // Busca as imagens do álbum
       try {
@@ -354,10 +356,10 @@ coverImg.addEventListener("mouseleave", () => {
           console.warn(`Erro ao buscar imagens do álbum ${album.id}`);
           throw new Error("Erro ao carregar imagens do álbum.");
         }
+
         const imagesData = await resImages.json();
 
         if (Array.isArray(imagesData.images)) {
-          // Ajuste aqui: usamos startsWith("fotocapa") pra ignorar extensões
           const fotoCapa = imagesData.images.find(img =>
             img.name.toLowerCase().startsWith("fotocapa")
           );
@@ -365,42 +367,40 @@ coverImg.addEventListener("mouseleave", () => {
           if (fotoCapa) {
             coverImg.src = `https://drive.google.com/thumbnail?id=${fotoCapa.id}`;
           } else {
-            // Caso não tenha a "FotoCapa", exibe um placeholder
             coverImg.src = "https://placehold.co/300x200?text=Sem+Capa";
           }
         } else {
           coverImg.src = "https://placehold.co/300x200?text=Sem+Capa";
         }
       } catch (error) {
-        // Se der erro, coloca um placeholder
-        console.error("Erro ao buscar capa:", error);
         coverImg.src = "https://placehold.co/300x200?text=Erro+Capa";
       }
 
-      // Ao clicar no card, vai pro álbum
       albumCard.onclick = () => {
         window.location.href = `album.html?album=${album.id}`;
       };
 
-      // Monta o card
       albumCard.appendChild(coverImg);
       albumCard.appendChild(title);
 
       // Adiciona ao container
       albumContainer.appendChild(albumCard);
+
+      // Após o primeiro álbum ser carregado, esconda o loader
+      if (!firstAlbumLoaded) {
+        isLoadingAlbums = false;
+        albumContainer.classList.remove("loading");
+        firstAlbumLoaded = true;  // Marca que o primeiro álbum foi carregado
+      }
     }
 
     console.log("Álbuns exibidos com capa!");
   } catch (error) {
     console.error("Erro ao carregar álbuns:", error);
     albumContainer.innerHTML = "<p style=' color: #e01f34; width: 100vw; text-align: center;'>Erro ao carregar os álbuns. Tente novamente mais tarde.</p>";
-} finally {
-  isLoadingAlbums = false;
-  if (albumContainer.querySelector(".loader")) {
-    albumContainer.querySelector(".loader").remove();
   }
 }
-}
+
 
 // Inicia o carregamento ao abrir a página somente se for necessário
 document.addEventListener("DOMContentLoaded", () => {
