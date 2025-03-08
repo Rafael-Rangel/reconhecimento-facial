@@ -34,13 +34,12 @@
     border: 2px solid #fff;
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.5);
-    display: none;
     transition: background 0.3s ease;
+    z-index: 10; /* pra garantir que fique acima da imagem */
 }
 
-/* Exibe a bolinha quando passa o mouse */
-.photo-container:hover .selection-circle {
-    display: block;
+.photo-container.selected .selection-circle {
+    background: red;
 }
 
 /* Se o container estiver selecionado, a bolinha fica vermelha */
