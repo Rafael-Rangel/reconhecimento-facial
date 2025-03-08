@@ -283,7 +283,6 @@ function displayMatchingImages(matches) {
 }
 
 
-
 function checkAndRemoveLoader() {
   const albumContainer = document.getElementById("album-container");
   const loader = albumContainer.querySelector(".loader");
@@ -299,7 +298,6 @@ function checkAndRemoveLoader() {
     }
   }
 }
-
 
 // Carrega os álbuns apenas se não estiver sendo carregado
 async function loadAlbums() {
@@ -324,7 +322,7 @@ async function loadAlbums() {
     const response = await fetch(`${API_URL}/main/folders`);
 
     if (!response.ok) {
-      console.warn('ALERTA: Erro na API: ${response.status}');
+      console.warn(`ALERTA: Erro na API: ${response.status}`);
       throw new Error("Erro ao carregar álbuns.");
     }
 
@@ -402,9 +400,8 @@ async function loadAlbums() {
 
       // Após o primeiro álbum ser carregado, remova o loader
       if (!firstAlbumLoaded) {
-        console.log("Primeiro álbum carregado! Removendo loader...");
         firstAlbumLoaded = true;  // Marca que o primeiro álbum foi carregado
-        albumContainer.classList.remove("loading");  // Remove o loader
+        checkAndRemoveLoader();  // Chama a função para verificar e remover o loader
       }
     }
 
@@ -412,14 +409,10 @@ async function loadAlbums() {
   } catch (error) {
     console.error("Erro ao carregar álbuns:", error);
     albumContainer.innerHTML = "<p style=' color: #e01f34; width: 100vw; text-align: center;'>Erro ao carregar os álbuns. Tente novamente mais tarde.</p>";
+  } finally {
+    isLoadingAlbums = false; // Resetando o estado após a conclusão
   }
 }
-
-// Após adicionar o álbum ao albumContainer
-albumContainer.appendChild(albumCard);
-
-// Verifique se já há álbum e remova o loader
-checkAndRemoveLoader();
 
 
 // Inicia o carregamento ao abrir a página somente se for necessário
