@@ -313,7 +313,7 @@ async function loadAlbums() {
     const data = await response.json();
     console.log("Álbuns recebidos:", data);
 
-    albumContainer.innerHTML = "";  // Limpa a galeria
+   
 
     if (!Array.isArray(data.folders) || data.folders.length === 0) {
       console.warn("⚠️ Nenhum álbum encontrado!");
