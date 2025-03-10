@@ -514,19 +514,43 @@ async function downloadSelectedImages(selectedIds) {
 }
 
 // Nova função: remove o loader do container de álbuns
-function removeIndexLoader() {
+// Função que aguarda o primeiro elemento com a classe "album-card" ser adicionado
+// dentro do container com id "album-container". Assim que ele aparecer, a função
+// busca dentro do container a div com a classe "loader" e "zera" sua classe.
+function waitForFirstAlbumCard() {
   const albumContainer = document.getElementById("album-container");
   if (!albumContainer) return;
 
-  // Remove a classe "loading" do container
-  albumContainer.classList.remove("loading");
+  const observer = new MutationObserver((mutations, obs) => {
+    mutations.forEach(mutation => {
+      // Verifica se foram adicionados novos nós
+      if (mutation.addedNodes.length > 0) {
+        mutation.addedNodes.forEach(node => {
+          // Se o nó é um elemento e tem a classe "album-card"
+          if (node.nodeType === Node.ELEMENT_NODE && node.classList.contains("album-card")) {
+            // Encontra a div com a classe "loader" dentro do container
+            const loaderDiv = albumContainer.querySelector(".loader");
+            if (loaderDiv) {
+              // "Zera" a classe da div, deixando-a sem classe
+              loaderDiv.className = "";
+            }
+            // Interrompe o observador após encontrar o primeiro album-card
+            obs.disconnect();
+          }
+        });
+      }
+    });
+  });
 
-  // Procura a div com a classe "loader" e zera a propriedade className
-  const loaderDiv = albumContainer.querySelector(".loader");
-  if (loaderDiv) {
-    loaderDiv.className = "";
-  }
+  // Observa alterações na lista de filhos do albumContainer
+  observer.observe(albumContainer, { childList: true });
 }
+
+// Chama a função quando o DOM estiver carregado
+document.addEventListener("DOMContentLoaded", () => {
+  waitForFirstAlbumCard();
+});
+
 
 
 
