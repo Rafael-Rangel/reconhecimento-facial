@@ -232,7 +232,7 @@ async function uploadSelfie() {
         const formData = new FormData();
         formData.append("file", file);
 
-        const response = await fetch(`${API_URL}/albums/${albumId}/upload-selfie?max_faces=5&threshold=70`, {
+        const response = await fetch(`${API_URL}/albums/${albumId}/upload-selfie?max_faces=4096&threshold=70`, {
             method: "POST",
             body: formData
         });
