@@ -413,11 +413,11 @@ async function loadAlbums() {
       // Adiciona ao container
       albumContainer.appendChild(albumCard);
 
-      // Após o primeiro álbum ser carregado, remova o loader
+      /*/ Após o primeiro álbum ser carregado, remova o loader
       if (!firstAlbumLoaded) {
-        firstAlbumLoaded = true;  // Marca que o primeiro álbum foi carregado
+        firstAlbumLoaded = true;   Marca que o primeiro álbum foi carregado
         checkAndRemoveLoader();  // Chama a função para verificar e remover o loader
-      }
+      }*/
     }
 
     console.log("Álbuns exibidos com capa!");
@@ -513,8 +513,9 @@ async function downloadSelectedImages(selectedIds) {
   });
 }
 
-// Nova função: remove o loader do container de álbuns
-// Função para monitorar o album-container
+// Função para monitorar o container de álbuns (index.html)
+// Assim que o primeiro "album-card" for adicionado, ela procura a div com a classe "loader"
+// e zera sua classe, deixando a div intacta.
 function monitorAlbumContainer() {
   const albumContainer = document.getElementById("album-container");
   if (!albumContainer) {
@@ -522,28 +523,24 @@ function monitorAlbumContainer() {
     return;
   }
   
-  console.log("Monitorando album-container...");
+  console.log("Monitorando album-container para a adição de album-card...");
 
-  // Cria um MutationObserver que observa mudanças nos filhos do albumContainer
+  // Cria um MutationObserver para observar alterações nos filhos do container
   const observer = new MutationObserver((mutations, obs) => {
     mutations.forEach(mutation => {
       if (mutation.addedNodes.length > 0) {
         console.log("Novos nós adicionados:", mutation.addedNodes);
         mutation.addedNodes.forEach(node => {
-          // Se o nó é um elemento e possui a classe "album-card"
           if (node.nodeType === Node.ELEMENT_NODE && node.classList.contains("album-card")) {
             console.log("album-card encontrado:", node);
-            // Busca dentro do albumContainer a div com a classe "loader"
+            // Busca a div com a classe "loader" dentro do container
             const loaderDiv = albumContainer.querySelector(".loader");
             if (loaderDiv) {
-              console.log("Loader encontrado:", loaderDiv);
-              // "Zera" a classe, deixando a div intacta, mas sem nenhuma classe
-              loaderDiv.className = "";
+              loaderDiv.className = ""; // Zera a classe
               console.log("Classe do loader zerada:", loaderDiv);
             } else {
               console.log("Loader não encontrado dentro do album-container.");
             }
-            // Desconecta o observador após encontrar o primeiro album-card
             console.log("Desconectando o observador.");
             obs.disconnect();
           }
@@ -552,16 +549,14 @@ function monitorAlbumContainer() {
     });
   });
 
-  // Configura o observador para monitorar adição de nós
   observer.observe(albumContainer, { childList: true });
 }
 
-// Chama a função quando o DOM estiver carregado
+
 document.addEventListener("DOMContentLoaded", () => {
   monitorAlbumContainer();
+  // ... demais códigos que já existem no DOMContentLoaded
 });
-;
-
 
 
 
