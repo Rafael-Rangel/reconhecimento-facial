@@ -514,27 +514,37 @@ async function downloadSelectedImages(selectedIds) {
 }
 
 // Nova função: remove o loader do container de álbuns
-// Função que aguarda o primeiro elemento com a classe "album-card" ser adicionado
-// dentro do container com id "album-container". Assim que ele aparecer, a função
-// busca dentro do container a div com a classe "loader" e "zera" sua classe.
-function waitForFirstAlbumCard() {
+// Função para monitorar o album-container
+function monitorAlbumContainer() {
   const albumContainer = document.getElementById("album-container");
-  if (!albumContainer) return;
+  if (!albumContainer) {
+    console.log("album-container não encontrado!");
+    return;
+  }
+  
+  console.log("Monitorando album-container...");
 
+  // Cria um MutationObserver que observa mudanças nos filhos do albumContainer
   const observer = new MutationObserver((mutations, obs) => {
     mutations.forEach(mutation => {
-      // Verifica se foram adicionados novos nós
       if (mutation.addedNodes.length > 0) {
+        console.log("Novos nós adicionados:", mutation.addedNodes);
         mutation.addedNodes.forEach(node => {
-          // Se o nó é um elemento e tem a classe "album-card"
+          // Se o nó é um elemento e possui a classe "album-card"
           if (node.nodeType === Node.ELEMENT_NODE && node.classList.contains("album-card")) {
-            // Encontra a div com a classe "loader" dentro do container
+            console.log("album-card encontrado:", node);
+            // Busca dentro do albumContainer a div com a classe "loader"
             const loaderDiv = albumContainer.querySelector(".loader");
             if (loaderDiv) {
-              // "Zera" a classe da div, deixando-a sem classe
+              console.log("Loader encontrado:", loaderDiv);
+              // "Zera" a classe, deixando a div intacta, mas sem nenhuma classe
               loaderDiv.className = "";
+              console.log("Classe do loader zerada:", loaderDiv);
+            } else {
+              console.log("Loader não encontrado dentro do album-container.");
             }
-            // Interrompe o observador após encontrar o primeiro album-card
+            // Desconecta o observador após encontrar o primeiro album-card
+            console.log("Desconectando o observador.");
             obs.disconnect();
           }
         });
@@ -542,14 +552,15 @@ function waitForFirstAlbumCard() {
     });
   });
 
-  // Observa alterações na lista de filhos do albumContainer
+  // Configura o observador para monitorar adição de nós
   observer.observe(albumContainer, { childList: true });
 }
 
 // Chama a função quando o DOM estiver carregado
 document.addEventListener("DOMContentLoaded", () => {
-  waitForFirstAlbumCard();
+  monitorAlbumContainer();
 });
+;
 
 
 
