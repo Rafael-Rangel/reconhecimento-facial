@@ -513,6 +513,83 @@ async function downloadSelectedImages(selectedIds) {
   });
 }
 
+// Nova função: remove o loader do container de álbuns
+function removeIndexLoader() {
+  const albumContainer = document.getElementById("album-container");
+  if (!albumContainer) return;
+
+  // Remove a classe "loading"
+  albumContainer.classList.remove("loading");
+
+  // Remove a <div class="loader"></div> que está lá dentro
+  const loaderDiv = albumContainer.querySelector(".loader");
+  if (loaderDiv) {
+    loaderDiv.remove();
+  }
+}
+
+async function loadAlbums() {
+  if (isLoadingAlbums) {
+    console.warn("⚠️ Já está carregando os álbuns! Ignorando nova chamada.");
+    return;
+  }
+  isLoadingAlbums = true;
+
+  const albumContainer = document.getElementById("album-container");
+  if (!albumContainer) {
+    console.warn("⚠️ Página sem #album-container, pulando carregamento de álbuns.");
+    return;
+  }
+
+  // Mostra o loader inicialmente
+  albumContainer.classList.add("loading");
+  albumContainer.innerHTML = '<div class="loader"></div>';
+
+  try {
+    console.log("Buscando álbuns...");
+    const response = await fetch(`${API_URL}/main/folders`);
+
+    if (!response.ok) {
+      console.warn(`ALERTA: Erro na API: ${response.status}`);
+      throw new Error("Erro ao carregar álbuns.");
+    }
+
+    const data = await response.json();
+    console.log("Álbuns recebidos:", data);
+
+    if (!Array.isArray(data.folders) || data.folders.length === 0) {
+      console.warn("⚠️ Nenhum álbum encontrado!");
+      albumContainer.innerHTML = "<p style='width: 100vw; text-align: center;'>Nenhum álbum disponível.</p>";
+      return;
+    }
+
+    let firstAlbumLoaded = false;
+
+    // Para cada álbum, cria um card
+    for (const album of data.folders) {
+      const albumCard = document.createElement("div");
+      albumCard.classList.add("album-card");
+
+      // ... restante do código de criação do card ...
+
+      // Adiciona ao container
+      albumContainer.appendChild(albumCard);
+
+      // Assim que o primeiro aparecer, remove o loader
+      if (!firstAlbumLoaded) {
+        firstAlbumLoaded = true;
+        removeIndexLoader(); // ⬅️ Chamando a função aqui!
+      }
+    }
+
+    console.log("Álbuns exibidos com capa!");
+  } catch (error) {
+    console.error("Erro ao carregar álbuns:", error);
+    albumContainer.innerHTML = "<p style=' color: #e01f34; width: 100vw; text-align: center;'>Erro ao carregar os álbuns. Tente novamente mais tarde.</p>";
+  } finally {
+    isLoadingAlbums = false;
+  }
+}
 
 
 // Expõe funções globalmente para evitar erro "loadAlbums is not defined"
