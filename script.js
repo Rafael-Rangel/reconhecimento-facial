@@ -553,14 +553,12 @@ function monitorAlbumContainer() {
 }
 
 
-document.addEventListener("DOMContentLoaded", () => {
-  monitorAlbumContainer();
-  // ... demais códigos que já existem no DOMContentLoaded
-});
 
 
 
 // Expõe funções globalmente para evitar erro "loadAlbums is not defined"
 window.loadAlbums = loadAlbums;
+monitorAlbumContainer();
+
 window.refreshAlbum = refreshAlbum;
 window.uploadSelfie = uploadSelfie;
