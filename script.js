@@ -413,11 +413,11 @@ async function loadAlbums() {
       // Adiciona ao container
       albumContainer.appendChild(albumCard);
 
-      /*/ Após o primeiro álbum ser carregado, remova o loader
+      // Após o primeiro álbum ser carregado, remova o loader
       if (!firstAlbumLoaded) {
-        firstAlbumLoaded = true;   Marca que o primeiro álbum foi carregado
-        checkAndRemoveLoader();  // Chama a função para verificar e remover o loader
-      }*/
+        firstAlbumLoaded = true;    // Marca que o primeiro álbum foi carregado
+          monitorAlbumContainer();  // Chama a função para verificar e remover o loader
+      }
     }
 
     console.log("Álbuns exibidos com capa!");
