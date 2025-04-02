@@ -331,7 +331,7 @@ div#album-container {
 
 .album-card {
   background:#fff;
-  padding: 20px;
+  padding: 0px;
   font-size:100%;
   margin-right: 15px;
   border-radius: 5px;
