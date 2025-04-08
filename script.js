@@ -38,7 +38,10 @@ async function loadAlbums() {
   albumContainer.innerHTML = '<div class="loader"></div>';
 
   try {
+    // Busca a lista de álbuns
     const data = await apiRequest("/main/folders");
+    console.log("Álbuns retornados pela API:", data.folders);
+
     if (!Array.isArray(data.folders) || data.folders.length === 0) {
       albumContainer.innerHTML = "<p>Nenhum álbum disponível.</p>";
       return;
@@ -47,9 +50,13 @@ async function loadAlbums() {
     // Busca as imagens do álbum FotosCapas
     const fotosCapasData = await apiRequest("/albums/FotosCapas/images");
     const fotosCapas = fotosCapasData.images || [];
+    console.log("Imagens encontradas no álbum FotosCapas:");
+    fotosCapas.forEach(img => console.log(`Imagem: ${img.name}, ID: ${img.id}`));
 
     const fragment = document.createDocumentFragment();
     data.folders.forEach(album => {
+      console.log(`Processando álbum: ${album.name}`);
+
       const albumCard = document.createElement("div");
       albumCard.classList.add("album-card");
       albumCard.innerHTML = `
@@ -62,8 +69,9 @@ async function loadAlbums() {
       // Busca a imagem de capa correspondente no álbum FotosCapas
       const coverImg = albumCard.querySelector(".album-cover");
       const fotoCapa = fotosCapas.find(img => {
-        const lowerAlbumName = album.name.toLowerCase();
-        const lowerImageName = img.name.toLowerCase().replace(/\.(jpg|jpeg|png)$/, ""); // Remove a extensão
+        const lowerAlbumName = album.name.trim().toLowerCase();
+        const lowerImageName = img.name.trim().toLowerCase().replace(/\.(jpg|jpeg|png)$/, ""); // Remove a extensão
+        console.log(`Comparando: "${lowerAlbumName}" com "${lowerImageName}"`);
         return lowerAlbumName === lowerImageName;
       });
 
