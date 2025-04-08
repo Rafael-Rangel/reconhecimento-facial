@@ -65,10 +65,21 @@ async function loadAlbums() {
           return lowerName.startsWith("fotocapa") && (lowerName.endsWith(".jpg") || lowerName.endsWith(".jpeg") || lowerName.endsWith(".png"));
         });
 
+        // Adiciona logs para depuração
+        console.log(`Álbum ID: ${album.id}`);
+        console.log(`Imagens retornadas:`, imagesData.images);
+        if (fotoCapa) {
+          console.log(`Imagem de capa encontrada:`, fotoCapa);
+          console.log(`Link da imagem de capa: https://drive.google.com/thumbnail?id=${fotoCapa.id}`);
+        } else {
+          console.log(`Nenhuma imagem de capa encontrada para o álbum ${album.id}`);
+        }
+
         coverImg.src = fotoCapa
           ? `https://drive.google.com/thumbnail?id=${fotoCapa.id}`
           : "https://placehold.co/300x200?text=Sem+Capa";
-      }).catch(() => {
+      }).catch(error => {
+        console.error(`Erro ao carregar imagens do álbum ${album.id}:`, error);
         albumCard.querySelector(".album-cover").src = "https://placehold.co/300x200?text=Erro+Capa";
       });
     });
