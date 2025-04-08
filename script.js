@@ -44,6 +44,10 @@ async function loadAlbums() {
       return;
     }
 
+    // Busca as imagens do álbum FotosCapas
+    const fotosCapasData = await apiRequest("/albums/FotosCapas/images");
+    const fotosCapas = fotosCapasData.images || [];
+
     const fragment = document.createDocumentFragment();
     data.folders.forEach(album => {
       const albumCard = document.createElement("div");
@@ -55,38 +59,27 @@ async function loadAlbums() {
       albumCard.onclick = () => window.location.href = `album.html?album=${album.id}`;
       fragment.appendChild(albumCard);
 
-      // Carrega a capa do álbum de forma assíncrona
-      apiRequest(`/albums/${album.id}/images`).then(imagesData => {
-        const coverImg = albumCard.querySelector(".album-cover");
-
-        // Busca a imagem de capa com base no nome "fotocapa" e extensões comuns
-        const fotoCapa = imagesData.images?.find(img => {
-          const lowerName = img.name.toLowerCase();
-          return lowerName.startsWith("fotocapa") && (lowerName.endsWith(".jpg") || lowerName.endsWith(".jpeg") || lowerName.endsWith(".png"));
-        });
-
-        // Adiciona logs para depuração
-        console.log(`Álbum ID: ${album.id}`);
-        console.log(`Imagens retornadas:`, imagesData.images);
-        if (fotoCapa) {
-          console.log(`Imagem de capa encontrada:`, fotoCapa);
-          console.log(`Link da imagem de capa: https://drive.google.com/thumbnail?id=${fotoCapa.id}`);
-        } else {
-          console.log(`Nenhuma imagem de capa encontrada para o álbum ${album.id}`);
-        }
-
-        coverImg.src = fotoCapa
-          ? `https://drive.google.com/thumbnail?id=${fotoCapa.id}`
-          : "https://placehold.co/300x200?text=Sem+Capa";
-      }).catch(error => {
-        console.error(`Erro ao carregar imagens do álbum ${album.id}:`, error);
-        albumCard.querySelector(".album-cover").src = "https://placehold.co/300x200?text=Erro+Capa";
+      // Busca a imagem de capa correspondente no álbum FotosCapas
+      const coverImg = albumCard.querySelector(".album-cover");
+      const fotoCapa = fotosCapas.find(img => {
+        const lowerAlbumName = album.name.toLowerCase();
+        const lowerImageName = img.name.toLowerCase().replace(/\.(jpg|jpeg|png)$/, ""); // Remove a extensão
+        return lowerAlbumName === lowerImageName;
       });
+
+      if (fotoCapa) {
+        console.log(`Imagem de capa encontrada para o álbum "${album.name}":`, fotoCapa);
+        coverImg.src = `https://drive.google.com/thumbnail?id=${fotoCapa.id}`;
+      } else {
+        console.log(`Nenhuma imagem de capa encontrada para o álbum "${album.name}"`);
+        coverImg.src = "https://placehold.co/300x200?text=Sem+Capa";
+      }
     });
 
     albumContainer.innerHTML = "";
     albumContainer.appendChild(fragment);
   } catch (error) {
+    console.error("Erro ao carregar os álbuns ou as capas:", error);
     albumContainer.innerHTML = "<p>Erro ao carregar os álbuns. Tente novamente mais tarde.</p>";
   } finally {
     isLoadingAlbums = false;
