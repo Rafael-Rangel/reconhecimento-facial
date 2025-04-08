@@ -102,6 +102,41 @@ async function loadAlbums() {
   }
 }
 
+// Carrega as imagens do álbum FotosCapas
+async function loadFotosCapas() {
+  try {
+    // Busca as imagens do álbum FotosCapas
+    const fotosCapasData = await apiRequest("/albums/FotosCapas/images");
+    const fotosCapas = fotosCapasData.images || [];
+
+    // Exibe todas as imagens retornadas no console
+    console.log("Imagens retornadas do álbum FotosCapas:");
+    fotosCapas.forEach(img => console.log(`Imagem: ${img.name}, ID: ${img.id}`));
+
+    // Renderiza as imagens no DOM
+    const fotosCapasContainer = document.getElementById("fotos-capas-container");
+    if (!fotosCapasContainer) {
+      console.error("Elemento com ID 'fotos-capas-container' não encontrado.");
+      return;
+    }
+
+    const fragment = document.createDocumentFragment();
+    fotosCapas.forEach(img => {
+      const imgElement = document.createElement("img");
+      imgElement.src = `https://drive.google.com/thumbnail?id=${img.id}`;
+      imgElement.alt = img.name;
+      imgElement.title = img.name;
+      imgElement.classList.add("fotos-capas-image");
+      fragment.appendChild(imgElement);
+    });
+
+    fotosCapasContainer.innerHTML = ""; // Limpa o contêiner antes de adicionar as imagens
+    fotosCapasContainer.appendChild(fragment);
+  } catch (error) {
+    console.error("Erro ao carregar as imagens do álbum FotosCapas:", error);
+  }
+}
+
 // Atualiza o álbum com otimização
 async function refreshAlbum(albumId) {
   if (isProcessing) return;
@@ -218,6 +253,9 @@ document.addEventListener("DOMContentLoaded", () => {
     loadAlbums();
   }
 
+  // Carrega as imagens do álbum FotosCapas
+  loadFotosCapas();
+
   document.getElementById("updateAlbumsBtn")?.addEventListener("click", debounce(loadAlbums, 300));
   document.getElementById("updateAlbumBtn")?.addEventListener("click", debounce(() => refreshAlbum(albumId), 300));
 });
@@ -226,3 +264,4 @@ document.addEventListener("DOMContentLoaded", () => {
 window.loadAlbums = loadAlbums;
 window.refreshAlbum = refreshAlbum;
 window.uploadSelfie = uploadSelfie;
+window.loadFotosCapas = loadFotosCapas;
