@@ -58,7 +58,13 @@ async function loadAlbums() {
       // Carrega a capa do álbum de forma assíncrona
       apiRequest(`/albums/${album.id}/images`).then(imagesData => {
         const coverImg = albumCard.querySelector(".album-cover");
-        const fotoCapa = imagesData.images?.find(img => img.name.toLowerCase().startsWith("fotocapa"));
+
+        // Busca a imagem de capa com base no nome "fotocapa" e extensões comuns
+        const fotoCapa = imagesData.images?.find(img => {
+          const lowerName = img.name.toLowerCase();
+          return lowerName.startsWith("fotocapa") && (lowerName.endsWith(".jpg") || lowerName.endsWith(".jpeg") || lowerName.endsWith(".png"));
+        });
+
         coverImg.src = fotoCapa
           ? `https://drive.google.com/thumbnail?id=${fotoCapa.id}`
           : "https://placehold.co/300x200?text=Sem+Capa";
