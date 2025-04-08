@@ -50,8 +50,16 @@ async function loadAlbums() {
     // Busca as imagens do álbum FotosCapas
     const fotosCapasData = await apiRequest("/albums/FotosCapas/images");
     const fotosCapas = fotosCapasData.images || [];
-    console.log("Imagens encontradas no álbum FotosCapas:");
+
+    // Adiciona um console.log para exibir todas as imagens retornadas
+    console.log("Todas as imagens retornadas do álbum FotosCapas:");
     fotosCapas.forEach(img => console.log(`Imagem: ${img.name}, ID: ${img.id}`));
+
+    console.log("Imagens encontradas no álbum FotosCapas:");
+
+    // Filtra as imagens cujo nome seja exatamente "FotosCapas"
+    const filteredFotosCapas = fotosCapas.filter(img => img.name.trim().toLowerCase() === "fotoscapas");
+    filteredFotosCapas.forEach(img => console.log(`Imagem filtrada: ${img.name}, ID: ${img.id}`));
 
     const fragment = document.createDocumentFragment();
     data.folders.forEach(album => {
@@ -68,7 +76,7 @@ async function loadAlbums() {
 
       // Busca a imagem de capa correspondente no álbum FotosCapas
       const coverImg = albumCard.querySelector(".album-cover");
-      const fotoCapa = fotosCapas.find(img => {
+      const fotoCapa = filteredFotosCapas.find(img => {
         const lowerAlbumName = album.name.trim().toLowerCase();
         const lowerImageName = img.name.trim().toLowerCase().replace(/\.(jpg|jpeg|png)$/, ""); // Remove a extensão
         console.log(`Comparando: "${lowerAlbumName}" com "${lowerImageName}"`);
