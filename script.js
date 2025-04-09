@@ -271,29 +271,49 @@ async function downloadSelectedImages(selectedIds) {
   });
 }
 
-// Adiciona evento de clique para a seleção via "selection-circle"
+// Adiciona evento de clique para a seleção ou download
 document.addEventListener("click", (event) => {
-  if (event.target.classList.contains("selection-circle")) {
-    const photoContainer = event.target.closest(".photo-container");
-    if (photoContainer) {
-      photoContainer.classList.toggle("selected");
+  const photoContainer = event.target.closest(".photo-container");
 
-      // Atualiza o array de imagens selecionadas
-      const img = photoContainer.querySelector("img");
-      const url = img.src;
-      const idMatch = url.match(/id=([^&]+)/);
+  if (!photoContainer) return;
 
-      if (idMatch) {
-        const imageId = idMatch[1];
-        if (photoContainer.classList.contains("selected")) {
-          selectedImages.push(imageId);
-        } else {
-          selectedImages = selectedImages.filter(id => id !== imageId);
-        }
-      }
+  // Clique na imagem para baixar
+  if (event.target.tagName === "IMG") {
+    const img = event.target;
+    const url = img.src;
+    const idMatch = url.match(/id=([^&]+)/);
 
-      console.log("Imagens selecionadas:", selectedImages);
+    if (idMatch) {
+      const imageId = idMatch[1];
+      const downloadUrl = `https://drive.google.com/uc?id=${imageId}&export=download`;
+      const a = document.createElement("a");
+      a.href = downloadUrl;
+      a.download = img.alt || "imagem.jpg";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     }
+  }
+
+  // Clique no círculo de seleção para selecionar/deselecionar
+  if (event.target.classList.contains("selection-circle")) {
+    photoContainer.classList.toggle("selected");
+
+    // Atualiza o array de imagens selecionadas
+    const img = photoContainer.querySelector("img");
+    const url = img.src;
+    const idMatch = url.match(/id=([^&]+)/);
+
+    if (idMatch) {
+      const imageId = idMatch[1];
+      if (photoContainer.classList.contains("selected")) {
+        selectedImages.push(imageId);
+      } else {
+        selectedImages = selectedImages.filter(id => id !== imageId);
+      }
+    }
+
+    console.log("Imagens selecionadas:", selectedImages);
   }
 });
 
