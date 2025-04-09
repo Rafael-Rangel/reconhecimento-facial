@@ -106,32 +106,6 @@ async function loadAlbums() {
   }
 }
 
-// Carrega as imagens do álbum FotosCapas e exibe no console
-async function loadFotosCapas() {
-  try {
-    // ID do álbum FotosCapas
-    const albumId = "1w3_3QJ0AMf-K6wqNHJPw4d5aWDekHTvN";
-
-    // Faz a requisição para buscar as imagens do álbum FotosCapas
-    const fotosCapasData = await apiRequest(`/albums/${albumId}/images`);
-    const fotosCapas = fotosCapasData.images || [];
-
-    // Verifica se as imagens foram retornadas
-    if (fotosCapas.length === 0) {
-      console.log("Nenhuma imagem encontrada no álbum FotosCapas.");
-      return;
-    }
-
-    // Exibe todas as imagens retornadas no console
-    console.log("Imagens retornadas do álbum FotosCapas:");
-    fotosCapas.forEach(img => {
-      console.log(`Imagem: ${img.name}, ID: ${img.id}, URL: ${img.url}`);
-    });
-  } catch (error) {
-    console.error("Erro ao carregar as imagens do álbum FotosCapas:", error);
-  }
-}
-
 // Atualiza o álbum com otimização
 async function refreshAlbum(albumId) {
   if (isProcessing) return;
