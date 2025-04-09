@@ -106,6 +106,28 @@ async function loadAlbums() {
   }
 }
 
+// Função para processar imagens do álbum
+async function processAlbumImages(albumId) {
+  console.log(`Iniciando o processamento das imagens do álbum: ${albumId}...`);
+
+  try {
+    const response = await apiRequest(`/albums/${albumId}/process-images`, {
+      method: "POST",
+    });
+
+    console.log("Resposta da API para processamento:", response);
+
+    if (response.message) {
+      console.log(`Mensagem da API: ${response.message}`);
+    }
+
+    console.log(`Processamento concluído. Total de imagens indexadas: ${response.total_indexed}`);
+  } catch (error) {
+    console.error("Erro ao processar as imagens do álbum:", error);
+    alert("Erro ao processar as imagens do álbum. Tente novamente mais tarde.");
+  }
+}
+
 // Atualiza o álbum com otimização
 async function refreshAlbum(albumId) {
   if (isProcessing) return;
@@ -128,17 +150,26 @@ async function refreshAlbum(albumId) {
       const container = document.createElement("div");
       container.classList.add("photo-container");
       container.innerHTML = `
-        <img src="https://drive.google.com/thumbnail?id=${image.id}" alt="${image.name}" class="fade-in">
+        <a href="https://drive.google.com/uc?id=${image.id}&export=download" download>
+          <img src="https://drive.google.com/thumbnail?id=${image.id}" alt="${image.name}" class="fade-in">
+        </a>
         <div class="selection-circle"></div>
       `;
-      container.onclick = () => toggleImageSelection(container, image.id);
       fragment.appendChild(container);
     });
 
     gallery.innerHTML = "";
     gallery.appendChild(fragment);
+
+    console.log("Imagens carregadas na galeria.");
+
+    // Chama a indexação das imagens após o carregamento
+    console.log("Iniciando a indexação das imagens do álbum...");
+    await processAlbumImages(albumId);
+    console.log("Indexação concluída.");
   } catch (error) {
     gallery.innerHTML = "<p>Erro ao carregar as imagens. Tente novamente mais tarde.</p>";
+    console.error("Erro ao carregar as imagens:", error);
   } finally {
     isProcessing = false;
   }
@@ -273,51 +304,77 @@ async function downloadSelectedImages(selectedIds) {
 
 // Adiciona evento de clique para a seleção ou download
 document.addEventListener("click", (event) => {
-  const photoContainer = event.target.closest(".photo-container");
+  console.log("Elemento clicado:", event.target); // Loga o elemento clicado
 
-  if (!photoContainer) return;
-
-  // Clique no círculo de seleção para selecionar/deselecionar
+  // Clique no círculo de seleção
   if (event.target.classList.contains("selection-circle")) {
-    event.stopPropagation(); // Impede que o clique propague para o contêiner pai
-    photoContainer.classList.toggle("selected");
-
-    // Atualiza o array de imagens selecionadas
-    const img = photoContainer.querySelector("img");
-    const url = img.src;
-    const idMatch = url.match(/id=([^&]+)/);
-
-    if (idMatch) {
-      const imageId = idMatch[1];
-      if (photoContainer.classList.contains("selected")) {
-        selectedImages.push(imageId);
-      } else {
-        selectedImages = selectedImages.filter(id => id !== imageId);
-      }
+    console.log("Círculo de seleção clicado.");
+    const photoContainer = event.target.closest(".photo-container");
+    if (photoContainer) {
+      toggleSelection(photoContainer); // Alterna a seleção
     }
-
-    console.log("Imagens selecionadas:", selectedImages);
     return; // Sai da função para evitar conflitos
   }
 
-  // Clique na imagem para baixar
-  if (event.target.tagName === "IMG") {
-    const img = event.target;
-    const url = img.src;
-    const idMatch = url.match(/id=([^&]+)/);
+  // Clique na imagem
+  if (event.target.tagName === "IMG" && event.target.closest(".photo-container")) {
+    console.log("Imagem clicada para download:", event.target.src);
+    event.stopPropagation(); // Impede que o clique na imagem afete o contêiner pai
+    downloadImage(event.target); // Baixa a imagem
+    return; // Sai da função para evitar conflitos
+  }
 
-    if (idMatch) {
-      const imageId = idMatch[1];
-      const downloadUrl = `https://drive.google.com/uc?id=${imageId}&export=download`;
-      const a = document.createElement("a");
-      a.href = downloadUrl;
-      a.download = img.alt || "imagem.jpg";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+  console.log("Nenhuma ação definida para este clique.");
+});
+
+// Função para alternar a seleção de uma imagem
+function toggleSelection(photoContainer) {
+  photoContainer.classList.toggle("selected");
+  console.log("Classe 'selected' alternada no contêiner:", photoContainer);
+
+  // Atualiza o array de imagens selecionadas
+  const img = photoContainer.querySelector("img");
+  const url = img.src;
+  const idMatch = url.match(/id=([^&]+)/);
+
+  if (idMatch) {
+    const imageId = idMatch[1];
+    if (photoContainer.classList.contains("selected")) {
+      if (!selectedImages.includes(imageId)) {
+        selectedImages.push(imageId);
+        console.log("Imagem adicionada à seleção:", imageId);
+      }
+    } else {
+      selectedImages = selectedImages.filter(id => id !== imageId);
+      console.log("Imagem removida da seleção:", imageId);
     }
   }
-});
+
+  console.log("Estado atual das imagens selecionadas:", selectedImages);
+}
+
+// Função para baixar uma imagem
+function downloadImage(img) {
+  const url = img.src;
+  const idMatch = url.match(/id=([^&]+)/);
+
+  if (idMatch) {
+    const imageId = idMatch[1];
+    const downloadUrl = `https://drive.google.com/uc?id=${imageId}&export=download`;
+    console.log("Iniciando download da imagem:", imageId, "URL:", downloadUrl);
+
+    const a = document.createElement("a");
+    a.href = downloadUrl;
+    a.download = img.alt || "imagem.jpg";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    console.log("Download concluído para a imagem:", imageId);
+  } else {
+    console.log("Erro: ID da imagem não encontrado na URL:", url);
+  }
+}
 
 // Inicializa eventos e carregamento
 document.addEventListener("DOMContentLoaded", () => {
