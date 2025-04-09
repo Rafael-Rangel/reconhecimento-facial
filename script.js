@@ -47,91 +47,50 @@ async function loadAlbums() {
       return;
     }
 
-    // Busca as imagens do álbum FotosCapas
-    const fotosCapasData = await apiRequest("/albums/FotosCapas/images");
-    const fotosCapas = fotosCapasData.images || [];
-
-    // Adiciona um console.log para exibir todas as imagens retornadas
-    console.log("Todas as imagens retornadas do álbum FotosCapas:");
-    fotosCapas.forEach(img => console.log(`Imagem: ${img.name}, ID: ${img.id}`));
-
-    console.log("Imagens encontradas no álbum FotosCapas:");
-
-    // Filtra as imagens cujo nome seja exatamente "FotosCapas"
-    const filteredFotosCapas = fotosCapas.filter(img => img.name.trim().toLowerCase() === "fotoscapas");
-    filteredFotosCapas.forEach(img => console.log(`Imagem filtrada: ${img.name}, ID: ${img.id}`));
-
     const fragment = document.createDocumentFragment();
     data.folders.forEach(album => {
-      console.log(`Processando álbum: ${album.name}`);
-
+      // Cria os cartões dos álbuns sem tentar buscar imagens de capa
       const albumCard = document.createElement("div");
       albumCard.classList.add("album-card");
       albumCard.innerHTML = `
-        <img src="https://placehold.co/300x200?text=Carregando..." alt="Capa do Álbum" class="album-cover">
+        <img src="https://placehold.co/300x200?text=Sem+Capa" alt="Capa do Álbum" class="album-cover">
         <h3>${album.name}</h3>
       `;
       albumCard.onclick = () => window.location.href = `album.html?album=${album.id}`;
       fragment.appendChild(albumCard);
-
-      // Busca a imagem de capa correspondente no álbum FotosCapas
-      const coverImg = albumCard.querySelector(".album-cover");
-      const fotoCapa = filteredFotosCapas.find(img => {
-        const lowerAlbumName = album.name.trim().toLowerCase();
-        const lowerImageName = img.name.trim().toLowerCase().replace(/\.(jpg|jpeg|png)$/, ""); // Remove a extensão
-        console.log(`Comparando: "${lowerAlbumName}" com "${lowerImageName}"`);
-        return lowerAlbumName === lowerImageName;
-      });
-
-      if (fotoCapa) {
-        console.log(`Imagem de capa encontrada para o álbum "${album.name}":`, fotoCapa);
-        coverImg.src = `https://drive.google.com/thumbnail?id=${fotoCapa.id}`;
-      } else {
-        console.log(`Nenhuma imagem de capa encontrada para o álbum "${album.name}"`);
-        coverImg.src = "https://placehold.co/300x200?text=Sem+Capa";
-      }
     });
 
     albumContainer.innerHTML = "";
     albumContainer.appendChild(fragment);
   } catch (error) {
-    console.error("Erro ao carregar os álbuns ou as capas:", error);
+    console.error("Erro ao carregar os álbuns:", error);
     albumContainer.innerHTML = "<p>Erro ao carregar os álbuns. Tente novamente mais tarde.</p>";
   } finally {
     isLoadingAlbums = false;
   }
 }
 
-// Carrega as imagens do álbum FotosCapas
+// Carrega as imagens do álbum FotosCapas e exibe no console
 async function loadFotosCapas() {
   try {
-    // Busca as imagens do álbum FotosCapas
-    const fotosCapasData = await apiRequest("/albums/FotosCapas/images");
+    // ID do álbum FotosCapas
+    const albumId = "1w3_3QJ0AMf-K6wqNHJPw4d5aWDekHTvN";
+
+    // Faz a requisição para buscar as imagens do álbum FotosCapas
+    const fotosCapasData = await apiRequest(`/albums/${albumId}/images`);
     const fotosCapas = fotosCapasData.images || [];
 
-    // Exibe todas as imagens retornadas no console
-    console.log("Imagens retornadas do álbum FotosCapas:");
-    fotosCapas.forEach(img => console.log(`Imagem: ${img.name}, ID: ${img.id}`));
-
-    // Renderiza as imagens no DOM
-    const fotosCapasContainer = document.getElementById("fotos-capas-container");
-    if (!fotosCapasContainer) {
-      console.error("Elemento com ID 'fotos-capas-container' não encontrado.");
+    // Verifica se as imagens foram retornadas
+    if (fotosCapas.length === 0) {
+      console.log("Nenhuma imagem encontrada no álbum FotosCapas.");
       return;
     }
 
-    const fragment = document.createDocumentFragment();
+    // Exibe todas as imagens retornadas no console
+    console.log("Imagens retornadas do álbum FotosCapas:");
     fotosCapas.forEach(img => {
-      const imgElement = document.createElement("img");
-      imgElement.src = `https://drive.google.com/thumbnail?id=${img.id}`;
-      imgElement.alt = img.name;
-      imgElement.title = img.name;
-      imgElement.classList.add("fotos-capas-image");
-      fragment.appendChild(imgElement);
+      console.log(`Imagem: ${img.name}, ID: ${img.id}, URL: ${img.url}`);
     });
-
-    fotosCapasContainer.innerHTML = ""; // Limpa o contêiner antes de adicionar as imagens
-    fotosCapasContainer.appendChild(fragment);
   } catch (error) {
     console.error("Erro ao carregar as imagens do álbum FotosCapas:", error);
   }
@@ -253,7 +212,7 @@ document.addEventListener("DOMContentLoaded", () => {
     loadAlbums();
   }
 
-  // Carrega as imagens do álbum FotosCapas
+  // Apenas lista as imagens do álbum FotosCapas no console
   loadFotosCapas();
 
   document.getElementById("updateAlbumsBtn")?.addEventListener("click", debounce(loadAlbums, 300));
