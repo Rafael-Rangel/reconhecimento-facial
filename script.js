@@ -277,26 +277,9 @@ document.addEventListener("click", (event) => {
 
   if (!photoContainer) return;
 
-  // Clique na imagem para baixar
-  if (event.target.tagName === "IMG") {
-    const img = event.target;
-    const url = img.src;
-    const idMatch = url.match(/id=([^&]+)/);
-
-    if (idMatch) {
-      const imageId = idMatch[1];
-      const downloadUrl = `https://drive.google.com/uc?id=${imageId}&export=download`;
-      const a = document.createElement("a");
-      a.href = downloadUrl;
-      a.download = img.alt || "imagem.jpg";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    }
-  }
-
   // Clique no círculo de seleção para selecionar/deselecionar
   if (event.target.classList.contains("selection-circle")) {
+    event.stopPropagation(); // Impede que o clique propague para o contêiner pai
     photoContainer.classList.toggle("selected");
 
     // Atualiza o array de imagens selecionadas
@@ -314,6 +297,25 @@ document.addEventListener("click", (event) => {
     }
 
     console.log("Imagens selecionadas:", selectedImages);
+    return; // Sai da função para evitar conflitos
+  }
+
+  // Clique na imagem para baixar
+  if (event.target.tagName === "IMG") {
+    const img = event.target;
+    const url = img.src;
+    const idMatch = url.match(/id=([^&]+)/);
+
+    if (idMatch) {
+      const imageId = idMatch[1];
+      const downloadUrl = `https://drive.google.com/uc?id=${imageId}&export=download`;
+      const a = document.createElement("a");
+      a.href = downloadUrl;
+      a.download = img.alt || "imagem.jpg";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
   }
 });
 
