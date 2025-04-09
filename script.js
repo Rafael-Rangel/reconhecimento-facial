@@ -38,10 +38,7 @@ async function loadAlbums() {
   albumContainer.innerHTML = '<div class="loader"></div>';
 
   try {
-    // Busca a lista de álbuns
     const data = await apiRequest("/main/folders");
-    console.log("Álbuns retornados pela API:", data.folders);
-
     if (!Array.isArray(data.folders) || data.folders.length === 0) {
       albumContainer.innerHTML = "<p>Nenhum álbum disponível.</p>";
       return;
@@ -49,50 +46,50 @@ async function loadAlbums() {
 
     const fragment = document.createDocumentFragment();
     data.folders.forEach(album => {
-      // Cria os cartões dos álbuns sem tentar buscar imagens de capa
       const albumCard = document.createElement("div");
       albumCard.classList.add("album-card");
       albumCard.innerHTML = `
-        <img src="https://placehold.co/300x200?text=Sem+Capa" alt="Capa do Álbum" class="album-cover">
+        <img src="https://placehold.co/300x200?text=Carregando..." alt="Capa do Álbum" class="album-cover">
         <h3>${album.name}</h3>
       `;
       albumCard.onclick = () => window.location.href = `album.html?album=${album.id}`;
       fragment.appendChild(albumCard);
+
+      // Carrega a capa do álbum de forma assíncrona
+      apiRequest(`/albums/${album.id}/images`).then(imagesData => {
+        const coverImg = albumCard.querySelector(".album-cover");
+
+        // Busca a imagem de capa com base no nome "fotocapa" e extensões comuns
+        const fotoCapa = imagesData.images?.find(img => {
+          const lowerName = img.name.toLowerCase();
+          return lowerName.startsWith("fotocapa") && (lowerName.endsWith(".jpg") || lowerName.endsWith(".jpeg") || lowerName.endsWith(".png"));
+        });
+
+        // Adiciona logs para depuração
+        console.log(`Álbum ID: ${album.id}`);
+        console.log(`Imagens retornadas:`, imagesData.images);
+        if (fotoCapa) {
+          console.log(`Imagem de capa encontrada:`, fotoCapa);
+          console.log(`Link da imagem de capa: https://drive.google.com/thumbnail?id=${fotoCapa.id}`);
+        } else {
+          console.log(`Nenhuma imagem de capa encontrada para o álbum ${album.id}`);
+        }
+
+        coverImg.src = fotoCapa
+          ? `https://drive.google.com/thumbnail?id=${fotoCapa.id}`
+          : "https://placehold.co/300x200?text=Sem+Capa";
+      }).catch(error => {
+        console.error(`Erro ao carregar imagens do álbum ${album.id}:`, error);
+        albumCard.querySelector(".album-cover").src = "https://placehold.co/300x200?text=Erro+Capa";
+      });
     });
 
     albumContainer.innerHTML = "";
     albumContainer.appendChild(fragment);
   } catch (error) {
-    console.error("Erro ao carregar os álbuns:", error);
     albumContainer.innerHTML = "<p>Erro ao carregar os álbuns. Tente novamente mais tarde.</p>";
   } finally {
     isLoadingAlbums = false;
-  }
-}
-
-// Carrega as imagens do álbum FotosCapas e exibe no console
-async function loadFotosCapas() {
-  try {
-    // ID do álbum FotosCapas
-    const albumId = "1w3_3QJ0AMf-K6wqNHJPw4d5aWDekHTvN";
-
-    // Faz a requisição para buscar as imagens do álbum FotosCapas
-    const fotosCapasData = await apiRequest(`/albums/${albumId}/images`);
-    const fotosCapas = fotosCapasData.images || [];
-
-    // Verifica se as imagens foram retornadas
-    if (fotosCapas.length === 0) {
-      console.log("Nenhuma imagem encontrada no álbum FotosCapas.");
-      return;
-    }
-
-    // Exibe todas as imagens retornadas no console
-    console.log("Imagens retornadas do álbum FotosCapas:");
-    fotosCapas.forEach(img => {
-      console.log(`Imagem: ${img.name}, ID: ${img.id}, URL: ${img.url}`);
-    });
-  } catch (error) {
-    console.error("Erro ao carregar as imagens do álbum FotosCapas:", error);
   }
 }
 
@@ -212,9 +209,6 @@ document.addEventListener("DOMContentLoaded", () => {
     loadAlbums();
   }
 
-  // Apenas lista as imagens do álbum FotosCapas no console
-  loadFotosCapas();
-
   document.getElementById("updateAlbumsBtn")?.addEventListener("click", debounce(loadAlbums, 300));
   document.getElementById("updateAlbumBtn")?.addEventListener("click", debounce(() => refreshAlbum(albumId), 300));
 });
@@ -223,4 +217,3 @@ document.addEventListener("DOMContentLoaded", () => {
 window.loadAlbums = loadAlbums;
 window.refreshAlbum = refreshAlbum;
 window.uploadSelfie = uploadSelfie;
-window.loadFotosCapas = loadFotosCapas;
