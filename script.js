@@ -47,28 +47,17 @@ async function loadAlbums() {
       return;
     }
 
-    // Busca as imagens do álbum FotosCapas
-    const fotosCapasData = await apiRequest("/albums/1w3_3QJ0AMf-K6wqNHJPw4d5aWDekHTvN/images");
-    const fotosCapas = fotosCapasData.images || [];
-    console.log("Imagens retornadas do álbum FotosCapas:", fotosCapas);
+    // Filtra o álbum FotosCapas para que ele não seja exibido
+    const filteredAlbums = data.folders.filter(album => album.name.trim().toLowerCase() !== "fotoscapas");
 
     const fragment = document.createDocumentFragment();
-    data.folders.forEach(album => {
+    filteredAlbums.forEach(album => {
       // Cria os cartões dos álbuns
       const albumCard = document.createElement("div");
       albumCard.classList.add("album-card");
 
-      // Busca a imagem de capa correspondente no álbum FotosCapas
-      const fotoCapa = fotosCapas.find(img => {
-        const lowerAlbumName = album.name.trim().toLowerCase();
-        const lowerImageName = img.name.trim().toLowerCase().replace(/\.(jpg|jpeg|png)$/, ""); // Remove a extensão
-        return lowerAlbumName === lowerImageName;
-      });
-
-      // Define a URL da capa ou usa uma imagem padrão
-      const capaUrl = fotoCapa
-        ? `https://drive.google.com/thumbnail?id=${fotoCapa.id}`
-        : "https://drive.google.com/thumbnail?id=1SILE8Ub-yNOXgxHXSfCAXLzEPS2EaMmx";
+      // Define uma imagem padrão para os álbuns
+      const capaUrl = "https://drive.google.com/thumbnail?id=1SILE8Ub-yNOXgxHXSfCAXLzEPS2EaMmx";
 
       albumCard.innerHTML = `
         <img 
