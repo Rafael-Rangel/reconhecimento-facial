@@ -222,8 +222,6 @@ document.addEventListener("DOMContentLoaded", () => {
     loadAlbums();
   }
 
-  // Apenas lista as imagens do álbum FotosCapas no console
-  loadFotosCapas();
 
   document.getElementById("updateAlbumsBtn")?.addEventListener("click", debounce(loadAlbums, 300));
   document.getElementById("updateAlbumBtn")?.addEventListener("click", debounce(() => refreshAlbum(albumId), 300));
@@ -233,4 +231,4 @@ document.addEventListener("DOMContentLoaded", () => {
 window.loadAlbums = loadAlbums;
 window.refreshAlbum = refreshAlbum;
 window.uploadSelfie = uploadSelfie;
-window.loadFotosCapas = loadFotosCapas;
+
