@@ -213,6 +213,90 @@ function displayMatchingImages(matches) {
   gallery.appendChild(fragment);
 }
 
+// Seleciona todas as fotos
+document.getElementById("select-all-btn").addEventListener("click", () => {
+  const containers = document.querySelectorAll(".photo-container");
+  selectedImages = [];
+  containers.forEach(container => {
+    if (!container.classList.contains("selected")) {
+      container.classList.add("selected");
+      // Obtenha o ID da imagem
+      const img = container.querySelector("img");
+      const url = img.src;
+      const idMatch = url.match(/id=([^&]+)/);
+      if (idMatch) {
+        selectedImages.push(idMatch[1]);
+      }
+    }
+  });
+  console.log("Selecionadas todas:", selectedImages);
+});
+
+// Baixa as fotos selecionadas em um ZIP
+document.getElementById("download-selected-btn").addEventListener("click", () => {
+  if (selectedImages.length === 0) {
+    alert("Nenhuma imagem selecionada!");
+    return;
+  }
+  downloadSelectedImages(selectedImages);
+});
+
+// Função para baixar imagens selecionadas e criar o ZIP
+async function downloadSelectedImages(selectedIds) {
+  const zip = new JSZip();
+  const imgFolder = zip.folder("imagens");
+
+  for (let i = 0; i < selectedIds.length; i++) {
+    const id = selectedIds[i];
+    const driveUrl = `https://drive.google.com/uc?id=${id}&export=download`;
+    const proxyUrl = `https://reconhecimento-facial-kappa.vercel.app/proxy?url=${encodeURIComponent(driveUrl)}`;
+    
+    try {
+      const response = await fetch(proxyUrl);
+      const blob = await response.blob();
+      const fileName = `imagem_${i + 1}.jpg`;
+      imgFolder.file(fileName, blob);
+    } catch (error) {
+      console.error("Erro ao baixar a imagem:", driveUrl, error);
+    }
+  }
+
+  zip.generateAsync({ type: "blob" }).then(function(content) {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(content);
+    a.download = "imagens.zip";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  });
+}
+
+// Adiciona evento de clique para a seleção via "selection-circle"
+document.addEventListener("click", (event) => {
+  if (event.target.classList.contains("selection-circle")) {
+    const photoContainer = event.target.closest(".photo-container");
+    if (photoContainer) {
+      photoContainer.classList.toggle("selected");
+
+      // Atualiza o array de imagens selecionadas
+      const img = photoContainer.querySelector("img");
+      const url = img.src;
+      const idMatch = url.match(/id=([^&]+)/);
+
+      if (idMatch) {
+        const imageId = idMatch[1];
+        if (photoContainer.classList.contains("selected")) {
+          selectedImages.push(imageId);
+        } else {
+          selectedImages = selectedImages.filter(id => id !== imageId);
+        }
+      }
+
+      console.log("Imagens selecionadas:", selectedImages);
+    }
+  }
+});
+
 // Inicializa eventos e carregamento
 document.addEventListener("DOMContentLoaded", () => {
   const albumId = new URLSearchParams(window.location.search).get("album");
@@ -222,7 +306,6 @@ document.addEventListener("DOMContentLoaded", () => {
     loadAlbums();
   }
 
-
   document.getElementById("updateAlbumsBtn")?.addEventListener("click", debounce(loadAlbums, 300));
   document.getElementById("updateAlbumBtn")?.addEventListener("click", debounce(() => refreshAlbum(albumId), 300));
 });
@@ -231,4 +314,3 @@ document.addEventListener("DOMContentLoaded", () => {
 window.loadAlbums = loadAlbums;
 window.refreshAlbum = refreshAlbum;
 window.uploadSelfie = uploadSelfie;
-
