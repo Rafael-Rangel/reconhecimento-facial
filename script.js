@@ -49,15 +49,40 @@ async function loadAlbums() {
 
     // Filtra o álbum FotosCapas para que ele não seja exibido
     const filteredAlbums = data.folders.filter(album => album.name.trim().toLowerCase() !== "fotoscapas");
+    console.log("Álbuns filtrados (sem FotosCapas):", filteredAlbums);
+
+    // Busca as imagens do álbum FotosCapas
+    const fotosCapasData = await apiRequest("/albums/1w3_3QJ0AMf-K6wqNHJPw4d5aWDekHTvN/images");
+    const fotosCapas = fotosCapasData.images || [];
+    console.log("Imagens retornadas do álbum FotosCapas:", fotosCapas);
 
     const fragment = document.createDocumentFragment();
     filteredAlbums.forEach(album => {
+      console.log(`Processando álbum: ${album.name}`);
+
       // Cria os cartões dos álbuns
       const albumCard = document.createElement("div");
       albumCard.classList.add("album-card");
 
-      // Define uma imagem padrão para os álbuns
-      const capaUrl = "https://drive.google.com/thumbnail?id=1SILE8Ub-yNOXgxHXSfCAXLzEPS2EaMmx";
+      // Busca a imagem de capa correspondente no álbum FotosCapas
+      const fotoCapa = fotosCapas.find(img => {
+        const lowerAlbumName = album.name.trim().toLowerCase();
+        const lowerImageName = img.name.trim().toLowerCase().replace(/\.(jpg|jpeg|png)$/, ""); // Remove a extensão
+        console.log(`Comparando álbum "${lowerAlbumName}" com imagem "${lowerImageName}"`);
+        return lowerAlbumName === lowerImageName;
+      });
+
+      // Log para verificar qual imagem foi associada ao álbum
+      if (fotoCapa) {
+        console.log(`Imagem encontrada para o álbum "${album.name}":`, fotoCapa);
+      } else {
+        console.log(`Nenhuma imagem encontrada para o álbum "${album.name}".`);
+      }
+
+      // Define a URL da capa ou usa uma imagem padrão
+      const capaUrl = fotoCapa
+        ? `https://drive.google.com/thumbnail?id=${fotoCapa.id}`
+        : "https://drive.google.com/thumbnail?id=1SILE8Ub-yNOXgxHXSfCAXLzEPS2EaMmx";
 
       albumCard.innerHTML = `
         <img 
