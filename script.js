@@ -72,17 +72,20 @@ async function loadAlbums() {
         return lowerAlbumName === lowerImageName;
       });
 
+      // Define a URL da capa ou usa uma imagem padrão
+      const capaUrl = fotoCapa
+        ? `https://drive.google.com/thumbnail?id=${fotoCapa.id}`
+        : "https://placehold.co/300x200?text=Sem+Capa"; // Placeholder padrão
+
+      // Define o nome do álbum ou indica que está sem capa
+      const albumName = fotoCapa ? album.name : `${album.name}`;
+
       // Log para verificar qual imagem foi associada ao álbum
       if (fotoCapa) {
         console.log(`Imagem encontrada para o álbum "${album.name}":`, fotoCapa);
       } else {
-        console.log(`Nenhuma imagem encontrada para o álbum "${album.name}".`);
+        console.log(`Nenhuma imagem encontrada para o álbum "${album.name}". Usando placeholder.`);
       }
-
-      // Define a URL da capa ou usa uma imagem padrão
-      const capaUrl = fotoCapa
-        ? `https://drive.google.com/thumbnail?id=${fotoCapa.id}`
-        : "https://drive.google.com/thumbnail?id=1SILE8Ub-yNOXgxHXSfCAXLzEPS2EaMmx";
 
       albumCard.innerHTML = `
         <img 
@@ -90,7 +93,7 @@ async function loadAlbums() {
           alt="Capa do Álbum" 
           style="border-radius: 5px; width: 100%; height: 200px; object-fit: cover; transition: transform 0.3s; transform: scale(1.05);"
         >
-        <h3>${album.name}</h3>
+        <h3>${albumName}</h3>
       `;
       albumCard.onclick = () => window.location.href = `album.html?album=${album.id}`;
       fragment.appendChild(albumCard);
@@ -232,12 +235,17 @@ function displayMatchingImages(matches) {
 
   const fragment = document.createDocumentFragment();
   matches.forEach(match => {
-    const img = document.createElement("img");
-    img.src = `https://drive.google.com/thumbnail?id=${match.image_id}`;
-    img.alt = "";
-    img.classList.add("fade-in");
-    img.onclick = () => window.open(`https://drive.google.com/uc?id=${match.image_id}&export=download`, "_blank");
-    fragment.appendChild(img);
+    const container = document.createElement("div");
+    container.classList.add("photo-container");
+
+    container.innerHTML = `
+      <a href="https://drive.google.com/uc?id=${match.image_id}&export=download" download="">
+        <img src="https://drive.google.com/thumbnail?id=${match.image_id}" alt="" class="fade-in">
+      </a>
+      <div class="selection-circle"></div>
+    `;
+
+    fragment.appendChild(container);
   });
 
   gallery.innerHTML = "";
@@ -262,6 +270,7 @@ document.getElementById("select-all-btn").addEventListener("click", () => {
   });
   console.log("Selecionadas todas:", selectedImages);
 });
+
 
 // Baixa as fotos selecionadas em um ZIP
 document.getElementById("download-selected-btn").addEventListener("click", () => {
