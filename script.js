@@ -33,9 +33,12 @@ async function loadAlbums() {
   isLoadingAlbums = true;
 
   const albumContainer = document.getElementById("album-container");
-  if (!albumContainer) return;
+  if (!albumContainer) {
+    console.error("Elemento 'album-container' não encontrado no DOM.");
+    return;
+  }
 
-  albumContainer.innerHTML = '<div class="loader"></div>';
+  albumContainer.innerHTML = '<div class="loader"></div>'; // Exibe um loader enquanto carrega
 
   try {
     // Busca a lista de álbuns
@@ -52,9 +55,15 @@ async function loadAlbums() {
     console.log("Álbuns filtrados (sem FotosCapas):", filteredAlbums);
 
     // Busca as imagens do álbum FotosCapas
-    const fotosCapasData = await apiRequest("/albums/1w3_3QJ0AMf-K6wqNHJPw4d5aWDekHTvN/images");
-    const fotosCapas = fotosCapasData.images || [];
-    console.log("Imagens retornadas do álbum FotosCapas:", fotosCapas);
+    let fotosCapas = [];
+    try {
+      const fotosCapasData = await apiRequest("/albums/1w3_3QJ0AMf-K6wqNHJPw4d5aWDekHTvN/images-paginated?page_size=100");
+      fotosCapas = fotosCapasData.images || [];
+      console.log("Imagens retornadas do álbum FotosCapas:", fotosCapas);
+    } catch (error) {
+      console.error("Erro ao buscar imagens do álbum FotosCapas:", error);
+      // Continua sem as imagens de capa
+    }
 
     const fragment = document.createDocumentFragment();
     filteredAlbums.forEach(album => {
@@ -77,30 +86,20 @@ async function loadAlbums() {
         ? `https://drive.google.com/thumbnail?id=${fotoCapa.id}`
         : "https://placehold.co/300x200?text=Sem+Capa"; // Placeholder padrão
 
-      // Define o nome do álbum ou indica que está sem capa
-      const albumName = fotoCapa ? album.name : `${album.name}`;
-
-      // Log para verificar qual imagem foi associada ao álbum
-      if (fotoCapa) {
-        console.log(`Imagem encontrada para o álbum "${album.name}":`, fotoCapa);
-      } else {
-        console.log(`Nenhuma imagem encontrada para o álbum "${album.name}". Usando placeholder.`);
-      }
-
       albumCard.innerHTML = `
         <img 
           src="${capaUrl}" 
           alt="Capa do Álbum" 
           style="border-radius: 5px; width: 100%; height: 200px; object-fit: cover; transition: transform 0.3s; transform: scale(1.05);"
         >
-        <h3>${albumName}</h3>
+        <h3>${album.name}</h3>
       `;
       albumCard.onclick = () => window.location.href = `album.html?album=${album.id}`;
       fragment.appendChild(albumCard);
     });
 
-    albumContainer.innerHTML = "";
-    albumContainer.appendChild(fragment);
+    albumContainer.innerHTML = ""; // Limpa o container
+    albumContainer.appendChild(fragment); // Adiciona os álbuns ao DOM
   } catch (error) {
     console.error("Erro ao carregar os álbuns:", error);
     albumContainer.innerHTML = "<p>Erro ao carregar os álbuns. Tente novamente mais tarde.</p>";
@@ -139,10 +138,11 @@ async function refreshAlbum(albumId) {
   const gallery = document.getElementById("image-gallery");
   if (!gallery) return;
 
-  gallery.innerHTML = '<div class="loader"></div>';
+  gallery.innerHTML = '<div class="loader"></div>'; // Exibe um loader enquanto carrega
 
   try {
-    const data = await apiRequest(`/albums/${albumId}/images`);
+    // Use a rota correta para listar imagens do álbum
+    const data = await apiRequest(`/albums/${albumId}/images-paginated?page_size=100`);
     if (!Array.isArray(data.images) || data.images.length === 0) {
       gallery.innerHTML = "<p>Nenhuma imagem disponível.</p>";
       return;
@@ -161,18 +161,13 @@ async function refreshAlbum(albumId) {
       fragment.appendChild(container);
     });
 
-    gallery.innerHTML = "";
-    gallery.appendChild(fragment);
+    gallery.innerHTML = ""; // Limpa o conteúdo anterior
+    gallery.appendChild(fragment); // Adiciona as imagens ao DOM
 
     console.log("Imagens carregadas na galeria.");
-
-    // Chama a indexação das imagens após o carregamento
-    console.log("Iniciando a indexação das imagens do álbum...");
-    await processAlbumImages(albumId);
-    console.log("Indexação concluída.");
   } catch (error) {
-    gallery.innerHTML = "<p>Erro ao carregar as imagens. Tente novamente mais tarde.</p>";
     console.error("Erro ao carregar as imagens:", error);
+    gallery.innerHTML = "<p>Erro ao carregar as imagens. Tente novamente mais tarde.</p>";
   } finally {
     isProcessing = false;
   }
