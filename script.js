@@ -142,7 +142,7 @@ async function refreshAlbum(albumId) {
 
   try {
     // Use a rota correta para listar imagens do álbum
-    const data = await apiRequest(`/albums/${albumId}/images-paginated?page_size=100`);
+    const data = await apiRequest(`/albums/${albumId}/images-paginated?page_size=300`);
     if (!Array.isArray(data.images) || data.images.length === 0) {
       gallery.innerHTML = "<p>Nenhuma imagem disponível.</p>";
       return;
