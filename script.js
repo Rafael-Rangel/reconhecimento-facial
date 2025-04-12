@@ -398,16 +398,22 @@ function downloadImage(img) {
 }
 
 // Inicializa eventos e carregamento
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", function () {
   const albumId = new URLSearchParams(window.location.search).get("album");
+
   if (albumId) {
-    refreshAlbum(albumId, true); // Primeira carga com reset
-  } else {
-    loadAlbums();
+    console.log("🚀 Página carregada dentro de um álbum, tentando atualizar...");
+    refreshAlbum(albumId, true); // Primeira carga
   }
 
-  document.getElementById("updateAlbumsBtn")?.addEventListener("click", debounce(loadAlbums, 300));
-  document.getElementById("updateAlbumBtn")?.addEventListener("click", debounce(() => refreshAlbum(albumId, true), 300));
+  // Adiciona o evento de clique ao botão "Atualizar Álbum"
+  const updateButton = document.getElementById("updateAlbumBtn");
+  if (updateButton) {
+    updateButton.addEventListener("click", () => {
+      console.log("🔄 Botão 'Atualizar Álbum' clicado!");
+      refreshAlbum(albumId, true); // Atualiza o álbum
+    });
+  }
 });
 
 // Adiciona evento de scroll para carregar mais imagens
