@@ -54,14 +54,16 @@ async function loadAlbums() {
     const filteredAlbums = data.folders.filter(album => album.name.trim().toLowerCase() !== "fotoscapas");
     console.log("Álbuns filtrados (sem FotosCapas):", filteredAlbums);
 
-    // Busca as imagens do álbum FotosCapas
+    // Processa as imagens do álbum FotosCapas
     let fotosCapas = [];
     try {
-      const fotosCapasData = await apiRequest("/albums/1w3_3QJ0AMf-K6wqNHJPw4d5aWDekHTvN/images-paginated?page_size=100");
-      fotosCapas = fotosCapasData.images || [];
-      console.log("Imagens retornadas do álbum FotosCapas:", fotosCapas);
+      const processResponse = await apiRequest("/albums/1w3_3QJ0AMf-K6wqNHJPw4d5aWDekHTvN/process-images", {
+        method: "POST",
+      });
+      fotosCapas = processResponse.images || [];
+      console.log("Imagens processadas do álbum FotosCapas:", fotosCapas);
     } catch (error) {
-      console.error("Erro ao buscar imagens do álbum FotosCapas:", error);
+      console.error("Erro ao processar imagens do álbum FotosCapas:", error);
       // Continua sem as imagens de capa
     }
 
