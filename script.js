@@ -3,6 +3,8 @@ let selectedImages = [];
 let imageMap = {};
 let isProcessing = false;
 let isLoadingAlbums = false;
+let currentPageToken = null; // Token da página atual
+let hasMoreImages = true; // Indica se há mais imagens para carregar
 
 // Função genérica para requisições à API
 async function apiRequest(endpoint, options = {}) {
@@ -133,43 +135,57 @@ async function processAlbumImages(albumId) {
 }
 
 // Atualiza o álbum com otimização
-async function refreshAlbum(albumId) {
-  if (isProcessing) return;
+async function refreshAlbum(albumId, isInitialLoad = false) {
+  if (isProcessing || !hasMoreImages) return;
   isProcessing = true;
 
   const gallery = document.getElementById("image-gallery");
   if (!gallery) return;
 
-  gallery.innerHTML = '<div class="loader"></div>'; // Exibe um loader enquanto carrega
+  if (isInitialLoad) {
+    gallery.innerHTML = '<div class="loader"></div>'; // Exibe um loader na primeira carga
+    currentPageToken = null; // Reseta o token para a primeira requisição
+    hasMoreImages = true; // Permite carregar mais imagens
+  }
 
   try {
-    // Use a rota correta para listar imagens do álbum
-    const data = await apiRequest(`/albums/${albumId}/images-paginated?page_size=300`);
+    // Faz a requisição para a API com paginação
+    const endpoint = `/albums/${albumId}/process-images?page_size=32${currentPageToken ? `&page_token=${currentPageToken}` : ""}`;
+    const data = await apiRequest(endpoint, { method: "POST" });
+
     if (!Array.isArray(data.images) || data.images.length === 0) {
-      gallery.innerHTML = "<p>Nenhuma imagem disponível.</p>";
+      if (isInitialLoad) gallery.innerHTML = "<p>Nenhuma imagem disponível.</p>";
+      hasMoreImages = false; // Não há mais imagens para carregar
       return;
     }
 
+    // Atualiza o token da próxima página
+    currentPageToken = data.page_token;
+    if (!currentPageToken) hasMoreImages = false; // Última página alcançada
+
+    // Cria os elementos das imagens e adiciona ao DOM
     const fragment = document.createDocumentFragment();
     data.images.forEach(image => {
       const container = document.createElement("div");
       container.classList.add("photo-container");
       container.innerHTML = `
-        <a href="https://drive.google.com/uc?id=${image.id}&export=download" download>
-          <img src="https://drive.google.com/thumbnail?id=${image.id}" alt="${image.name}" class="fade-in">
+        <a href="${image.url}&export=download" download>
+          <img src="${image.url}" alt="${image.name}" class="fade-in">
         </a>
         <div class="selection-circle"></div>
       `;
       fragment.appendChild(container);
     });
 
-    gallery.innerHTML = ""; // Limpa o conteúdo anterior
-    gallery.appendChild(fragment); // Adiciona as imagens ao DOM
+    if (isInitialLoad) {
+      gallery.innerHTML = ""; // Limpa o conteúdo anterior na primeira carga
+    }
+    gallery.appendChild(fragment); // Adiciona as novas imagens ao DOM
 
-    console.log("Imagens carregadas na galeria.");
+    console.log("Imagens carregadas:", data.images.length);
   } catch (error) {
     console.error("Erro ao carregar as imagens:", error);
-    gallery.innerHTML = "<p>Erro ao carregar as imagens. Tente novamente mais tarde.</p>";
+    if (isInitialLoad) gallery.innerHTML = "<p>Erro ao carregar as imagens. Tente novamente mais tarde.</p>";
   } finally {
     isProcessing = false;
   }
@@ -267,7 +283,6 @@ document.getElementById("select-all-btn").addEventListener("click", () => {
   });
   console.log("Selecionadas todas:", selectedImages);
 });
-
 
 // Baixa as fotos selecionadas em um ZIP
 document.getElementById("download-selected-btn").addEventListener("click", () => {
@@ -386,13 +401,26 @@ function downloadImage(img) {
 document.addEventListener("DOMContentLoaded", () => {
   const albumId = new URLSearchParams(window.location.search).get("album");
   if (albumId) {
-    refreshAlbum(albumId);
+    refreshAlbum(albumId, true); // Primeira carga com reset
   } else {
     loadAlbums();
   }
 
   document.getElementById("updateAlbumsBtn")?.addEventListener("click", debounce(loadAlbums, 300));
-  document.getElementById("updateAlbumBtn")?.addEventListener("click", debounce(() => refreshAlbum(albumId), 300));
+  document.getElementById("updateAlbumBtn")?.addEventListener("click", debounce(() => refreshAlbum(albumId, true), 300));
+});
+
+// Adiciona evento de scroll para carregar mais imagens
+window.addEventListener("scroll", () => {
+  const scrollPosition = window.innerHeight + window.scrollY;
+  const threshold = document.body.offsetHeight - 100; // 100px antes do final da página
+
+  if (scrollPosition >= threshold) {
+    const albumId = new URLSearchParams(window.location.search).get("album");
+    if (albumId) {
+      refreshAlbum(albumId); // Carrega mais imagens
+    }
+  }
 });
 
 // Expõe funções globalmente
