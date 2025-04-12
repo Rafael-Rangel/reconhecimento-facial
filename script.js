@@ -169,8 +169,8 @@ async function refreshAlbum(albumId, isInitialLoad = false) {
       const container = document.createElement("div");
       container.classList.add("photo-container");
       container.innerHTML = `
-        <a href="${image.url}&export=download" download>
-          <img src="${image.url}" alt="${image.name}" class="fade-in">
+        <a href="https://drive.google.com/uc?id=${image.id}&export=download" download>
+          <img src="https://drive.google.com/thumbnail?id=${image.id}" alt="${image.name}" class="fade-in">
         </a>
         <div class="selection-circle"></div>
       `;
