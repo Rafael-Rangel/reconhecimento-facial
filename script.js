@@ -11,11 +11,11 @@ async function apiRequest(endpoint, options = {}) {
   try {
     const response = await fetch(`${API_URL}${endpoint}`, options);
     if (!response.ok) {
-      throw new Error(Erro na API: ${response.status} - ${response.statusText});
+      throw new Error(`Erro na API: ${response.status} - ${response.statusText}`);
     }
     return await response.json();
   } catch (error) {
-    console.error(Erro na requisição para ${endpoint}:, error);
+    console.error(`Erro na requisição para ${endpoint}:`, error);
     throw error;
   }
 }
@@ -71,7 +71,7 @@ async function loadAlbums() {
 
     const fragment = document.createDocumentFragment();
     filteredAlbums.forEach(album => {
-      console.log(Processando álbum: ${album.name});
+      console.log(`Processando álbum: ${album.name}`);
 
       // Cria os cartões dos álbuns
       const albumCard = document.createElement("div");
@@ -81,24 +81,24 @@ async function loadAlbums() {
       const fotoCapa = fotosCapas.find(img => {
         const lowerAlbumName = album.name.trim().toLowerCase();
         const lowerImageName = img.name.trim().toLowerCase().replace(/\.(jpg|jpeg|png)$/, ""); // Remove a extensão
-        console.log(Comparando álbum "${lowerAlbumName}" com imagem "${lowerImageName}");
+        console.log(`Comparando álbum "${lowerAlbumName}" com imagem "${lowerImageName}"`);
         return lowerAlbumName === lowerImageName;
       });
 
       // Define a URL da capa ou usa uma imagem padrão
       const capaUrl = fotoCapa
-        ? https://drive.google.com/thumbnail?id=${fotoCapa.id}
+        ? `https://drive.google.com/thumbnail?id=${fotoCapa.id}`
         : "https://placehold.co/300x200?text=Sem+Capa"; // Placeholder padrão
 
-      albumCard.innerHTML = 
+      albumCard.innerHTML = `
         <img 
           src="${capaUrl}" 
           alt="Capa do Álbum" 
           style="border-radius: 5px; width: 100%; height: 200px; object-fit: cover; transition: transform 0.3s; transform: scale(1.05);"
         >
         <h3>${album.name}</h3>
-      ;
-      albumCard.onclick = () => window.location.href = album.html?album=${album.id};
+      `;
+      albumCard.onclick = () => window.location.href = `album.html?album=${album.id}`;
       fragment.appendChild(albumCard);
     });
 
@@ -114,20 +114,20 @@ async function loadAlbums() {
 
 // Função para processar imagens do álbum
 async function processAlbumImages(albumId) {
-  console.log(Iniciando o processamento das imagens do álbum: ${albumId}...);
+  console.log(`Iniciando o processamento das imagens do álbum: ${albumId}...`);
 
   try {
-    const response = await apiRequest(/albums/${albumId}/process-images, {
+    const response = await apiRequest(`/albums/${albumId}/process-images`, {
       method: "POST",
     });
 
     console.log("Resposta da API para processamento:", response);
 
     if (response.message) {
-      console.log(Mensagem da API: ${response.message});
+      console.log(`Mensagem da API: ${response.message}`);
     }
 
-    console.log(Processamento concluído. Total de imagens indexadas: ${response.total_indexed});
+    console.log(`Processamento concluído. Total de imagens indexadas: ${response.total_indexed}`);
   } catch (error) {
     console.error("Erro ao processar as imagens do álbum:", error);
     alert("Erro ao processar as imagens do álbum. Tente novamente mais tarde.");
@@ -150,7 +150,7 @@ async function refreshAlbum(albumId, isInitialLoad = false) {
 
   try {
     // Faz a requisição para a API com paginação
-    const endpoint = /albums/${albumId}/process-images?page_size=999${currentPageToken ? &page_token=${currentPageToken} : ""};
+    const endpoint = `/albums/${albumId}/process-images?page_size=999${currentPageToken ? `&page_token=${currentPageToken}` : ""}`;
     const data = await apiRequest(endpoint, { method: "POST" });
 
     if (!Array.isArray(data.images) || data.images.length === 0) {
@@ -168,12 +168,12 @@ async function refreshAlbum(albumId, isInitialLoad = false) {
     data.images.forEach(image => {
       const container = document.createElement("div");
       container.classList.add("photo-container");
-      container.innerHTML = 
+      container.innerHTML = `
         <a href="https://drive.google.com/uc?id=${image.id}&export=download" download>
           <img src="https://drive.google.com/thumbnail?id=${image.id}" alt="${image.name}" class="fade-in">
         </a>
         <div class="selection-circle"></div>
-      ;
+      `;
       fragment.appendChild(container);
     });
 
@@ -225,7 +225,7 @@ async function uploadSelfie() {
     const formData = new FormData();
     formData.append("file", file);
 
-    const data = await apiRequest(/albums/${albumId}/upload-selfie?max_faces=4096&threshold=70, {
+    const data = await apiRequest(`/albums/${albumId}/upload-selfie?max_faces=4096&threshold=70`, {
       method: "POST",
       body: formData
     });
@@ -251,13 +251,12 @@ function displayMatchingImages(matches) {
     const container = document.createElement("div");
     container.classList.add("photo-container");
 
-    container.innerHTML = 
+    container.innerHTML = `
       <a href="https://drive.google.com/uc?id=${match.image_id}&export=download" download="">
         <img src="https://drive.google.com/thumbnail?id=${match.image_id}" alt="" class="fade-in">
       </a>
       <div class="selection-circle"></div>
-    ;
-
+    `;
     fragment.appendChild(container);
   });
 
@@ -300,13 +299,13 @@ async function downloadSelectedImages(selectedIds) {
 
   for (let i = 0; i < selectedIds.length; i++) {
     const id = selectedIds[i];
-    const driveUrl = https://drive.google.com/uc?id=${id}&export=download;
-    const proxyUrl = https://reconhecimento-facial-kappa.vercel.app/proxy?url=${encodeURIComponent(driveUrl)};
+    const driveUrl = `https://drive.google.com/uc?id=${id}&export=download`;
+    const proxyUrl = `https://reconhecimento-facial-kappa.vercel.app/proxy?url=${encodeURIComponent(driveUrl)}`;
     
     try {
       const response = await fetch(proxyUrl);
       const blob = await response.blob();
-      const fileName = imagem_${i + 1}.jpg;
+      const fileName = `imagem_${i + 1}.jpg`;
       imgFolder.file(fileName, blob);
     } catch (error) {
       console.error("Erro ao baixar a imagem:", driveUrl, error);
@@ -381,7 +380,7 @@ function downloadImage(img) {
 
   if (idMatch) {
     const imageId = idMatch[1];
-    const downloadUrl = https://drive.google.com/uc?id=${imageId}&export=download;
+    const downloadUrl = `https://drive.google.com/uc?id=${imageId}&export=download`;
     console.log("Iniciando download da imagem:", imageId, "URL:", downloadUrl);
 
     const a = document.createElement("a");
