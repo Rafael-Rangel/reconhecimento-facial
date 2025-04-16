@@ -150,7 +150,7 @@ async function refreshAlbum(albumId, isInitialLoad = false) {
 
   try {
     // Faz a requisição para a API com paginação
-    const endpoint = `/albums/${albumId}/process-images?page_size=32${currentPageToken ? `&page_token=${currentPageToken}` : ""}`;
+    const endpoint = `/albums/${albumId}/process-images?page_size=999${currentPageToken ? `&page_token=${currentPageToken}` : ""}`;
     const data = await apiRequest(endpoint, { method: "POST" });
 
     if (!Array.isArray(data.images) || data.images.length === 0) {
