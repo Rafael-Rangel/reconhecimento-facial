@@ -6,29 +6,6 @@ let isLoadingAlbums = false;
 let currentPageToken = null; // Token da página atual
 let hasMoreImages = true; // Indica se há mais imagens para carregar
 
-// Função genérica para requisições à API
-async function apiRequest(endpoint, options = {}) {
-  try {
-    const response = await fetch(`${API_URL}${endpoint}`, options);
-    if (!response.ok) {
-      throw new Error(`Erro na API: ${response.status} - ${response.statusText}`);
-    }
-    return await response.json();
-  } catch (error) {
-    console.error(`Erro na requisição para ${endpoint}:`, error);
-    throw error;
-  }
-}
-
-// Debounce para evitar múltiplas chamadas simultâneas
-function debounce(func, delay) {
-  let timeout;
-  return (...args) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), delay);
-  };
-}
-
 // Carrega álbuns com otimização e define as capas
 async function loadAlbums() {
   if (isLoadingAlbums) return;
