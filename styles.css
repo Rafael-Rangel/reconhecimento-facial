@@ -712,17 +712,9 @@ input:focus, textarea:focus, select:focus {
   }
 }
 
-/* Quando estiver com a classe .loading, queremos exibir o loader no centro */
-#image-gallery.loading {
-  display: flex !important;       /* Sobrescreve o display grid */
-  align-items: center;
-  justify-content: center;
-  min-height: 200px;             /* Só pra ter espaço vertical */
-  grid-template-columns: none !important; /* Garante que não tente usar grid */
-}
-#image-gallery:not(.loading) {
-  display: grid;
-  /* ... seu grid normal ... */
+
+#image-gallery:not(:has(.photo-container)) {
+    grid-template-columns: repeat(1, 1fr);
 }
 
 
