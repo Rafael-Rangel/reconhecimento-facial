@@ -359,19 +359,19 @@ async function downloadImage(img) {
   // Seleciona o contêiner da imagem e seta o estilo de "carregando"
   const container = img.closest(".photo-container");
   if (container) {
-    // Seleciona o link dentro do container e aplica o estilo exato do modo carregando
-    const link = container.querySelector("a");
-    if (link) {
-      link.setAttribute("style", "display: flex; justify-content: center; align-items: center;");
-      // Verifica se já tem loader; se não, adiciona
-      if (!link.querySelector(".loader")) {
-        const loader = document.createElement("div");
-        loader.className = "loader";
-        loader.setAttribute("style", "position: absolute;z-index: 999;");
-        link.insertBefore(loader, link.firstChild);
-      }
+    // Aplica o estilo exato no container para o modo carregando
+    container.style.display = "flex";
+    container.style.justifyContent = "center";
+    container.style.alignItems = "center";
+
+    // Verifica se já tem loader; se não, adiciona o loader exato
+    if (!container.querySelector(".loader")) {
+      const loader = document.createElement("div");
+      loader.className = "loader";
+      loader.setAttribute("style", "position: absolute;z-index: 9;");
+      container.insertBefore(loader, container.firstChild);
     }
-    // Define o filtro da imagem pra 61%
+    // Define o filtro da imagem para 61%
     img.setAttribute("style", "filter: brightness( 61% );");
   }
 
@@ -395,19 +395,15 @@ async function downloadImage(img) {
   } finally {
     // Remove o loader e restaura o modo padrão exato
     if (container) {
-      const link = container.querySelector("a");
-      if (link) {
-        // Remove o loader (se existir) dentro do link
-        const loaderElem = link.querySelector(".loader");
-        if (loaderElem) loaderElem.remove();
-        // Remove os estilos inline pra voltar ao padrão (estilo original que você já tinha)
-        link.removeAttribute("style");
-      }
-      // Remove o filtro de brightness da imagem
-      img.removeAttribute("style");
+      const loaderElem = container.querySelector(".loader");
+      if (loaderElem) loaderElem.remove();
+      // Remove os estilos inline para voltar ao padrão (default não terá inline)
+      container.removeAttribute("style");
     }
+    img.removeAttribute("style");
   }
 }
+
 
 
 // Inicializa eventos e carregamento
