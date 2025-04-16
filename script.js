@@ -114,39 +114,32 @@ async function loadAlbums() {
 
 
 // Atualiza o álbum com otimização
-async function refreshAlbum(albumId, isInitialLoad = false) {
-  if (isProcessing || !hasMoreImages) return;
-  isProcessing = true;
-
+async function refreshAlbum(albumId) {
   const gallery = document.getElementById("image-gallery");
-  if (!gallery) return;
-
-  if (isInitialLoad) {
-    gallery.innerHTML = '<div class="loader"></div>'; // Exibe um loader na primeira carga
-    currentPageToken = null; // Reseta o token para a primeira requisição
-    hasMoreImages = true; // Permite carregar mais imagens
+  if (!gallery) {
+    console.error("Elemento 'image-gallery' não encontrado.");
+    return;
   }
 
+  gallery.innerHTML = '<div class="loader"></div>'; // Mostra o loader
+
   try {
-    // Faz a requisição para a API com paginação
-    const endpoint = `/albums/${albumId}/process-images?page_size=999${currentPageToken ? `&page_token=${currentPageToken}` : ""}`;
+    // Requisição única pra buscar todas as imagens
+    const endpoint = `/albums/${albumId}/process-images`;
     const data = await apiRequest(endpoint, { method: "POST" });
 
+    // Verifica se vieram imagens
     if (!Array.isArray(data.images) || data.images.length === 0) {
-      if (isInitialLoad) gallery.innerHTML = "<p>Nenhuma imagem disponível.</p>";
-      hasMoreImages = false; // Não há mais imagens para carregar
+      gallery.innerHTML = "<p>Nenhuma imagem encontrada.</p>";
       return;
     }
 
-    // Atualiza o token da próxima página
-    currentPageToken = data.page_token;
-    if (!currentPageToken) hasMoreImages = false; // Última página alcançada
-
-    // Cria os elementos das imagens e adiciona ao DOM
+    // Cria os elementos e coloca na galeria
     const fragment = document.createDocumentFragment();
     data.images.forEach(image => {
       const container = document.createElement("div");
       container.classList.add("photo-container");
+
       container.innerHTML = `
         <a href="https://drive.google.com/uc?id=${image.id}&export=download" download>
           <img src="https://drive.google.com/thumbnail?id=${image.id}" alt="${image.name}" class="fade-in">
@@ -156,19 +149,15 @@ async function refreshAlbum(albumId, isInitialLoad = false) {
       fragment.appendChild(container);
     });
 
-    if (isInitialLoad) {
-      gallery.innerHTML = ""; // Limpa o conteúdo anterior na primeira carga
-    }
-    gallery.appendChild(fragment); // Adiciona as novas imagens ao DOM
-
-    console.log("Imagens carregadas:", data.images.length);
+    gallery.innerHTML = ""; // Limpa o loader
+    gallery.appendChild(fragment); // Exibe as imagens
+    console.log(`✅ Carregadas ${data.images.length} imagens.`);
   } catch (error) {
-    console.error("Erro ao carregar as imagens:", error);
-    if (isInitialLoad) gallery.innerHTML = "<p>Erro ao carregar as imagens. Tente novamente mais tarde.</p>";
-  } finally {
-    isProcessing = false;
+    console.error("❌ Erro ao carregar as imagens:", error);
+    gallery.innerHTML = "<p>Erro ao carregar as imagens. Tente novamente mais tarde.</p>";
   }
 }
+
 
 // Alterna a seleção de imagens
 function toggleImageSelection(container, imageId) {
@@ -394,18 +383,6 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 
-// Adiciona evento de scroll para carregar mais imagens
-window.addEventListener("scroll", () => {
-  const scrollPosition = window.innerHeight + window.scrollY;
-  const threshold = document.body.offsetHeight - 100; // 100px antes do final da página
-
-  if (scrollPosition >= threshold) {
-    const albumId = new URLSearchParams(window.location.search).get("album");
-    if (albumId) {
-      refreshAlbum(albumId); // Carrega mais imagens
-    }
-  }
-});
 
 // Expõe funções globalmente
 window.loadAlbums = loadAlbums;
