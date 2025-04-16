@@ -141,9 +141,7 @@ async function refreshAlbum(albumId) {
       const container = document.createElement("div");
       container.classList.add("photo-container");
       container.innerHTML = `
-        <a href="https://drive.google.com/uc?id=${image.id}&export=download" download>
           <img src="https://drive.google.com/thumbnail?id=${image.id}" alt="${image.name}" class="fade-in">
-        </a>
         <div class="selection-circle"></div>
       `;
       fragment.appendChild(container);
@@ -345,27 +343,72 @@ function toggleSelection(photoContainer) {
 }
 
 // Função para baixar uma imagem
-function downloadImage(img) {
+async function downloadImage(img) {
   const url = img.src;
   const idMatch = url.match(/id=([^&]+)/);
+  if (!idMatch) {
+    console.log("Erro: ID da imagem não encontrado na URL:", url);
+    return;
+  }
+  const imageId = idMatch[1];
+  // URL original do drive
+  const driveUrl = `https://drive.google.com/uc?id=${imageId}&export=download`;
+  // Usando proxy pra evitar bloqueio de CORS
+  const proxyUrl = `https://reconhecimento-facial-kappa.vercel.app/proxy?url=${encodeURIComponent(driveUrl)}`;
 
-  if (idMatch) {
-    const imageId = idMatch[1];
-    const downloadUrl = `https://drive.google.com/uc?id=${imageId}&export=download`;
-    console.log("Iniciando download da imagem:", imageId, "URL:", downloadUrl);
+  // Seleciona o contêiner da imagem e seta o estilo de "carregando"
+  const container = img.closest(".photo-container");
+  if (container) {
+    // Seleciona o link dentro do container e aplica o estilo exato do modo carregando
+    const link = container.querySelector("a");
+    if (link) {
+      link.setAttribute("style", "display: flex; justify-content: center; align-items: center;");
+      // Verifica se já tem loader; se não, adiciona
+      if (!link.querySelector(".loader")) {
+        const loader = document.createElement("div");
+        loader.className = "loader";
+        loader.setAttribute("style", "position: absolute;z-index: 999;");
+        link.insertBefore(loader, link.firstChild);
+      }
+    }
+    // Define o filtro da imagem pra 61%
+    img.setAttribute("style", "filter: brightness( 61% );");
+  }
 
+  try {
+    // Tenta baixar a imagem via fetch usando o proxy
+    const response = await fetch(proxyUrl);
+    if (!response.ok) throw new Error("Erro no download!");
+    const blob = await response.blob();
+
+    // Cria um link temporário e dispara o download
     const a = document.createElement("a");
-    a.href = downloadUrl;
+    a.href = URL.createObjectURL(blob);
     a.download = img.alt || "imagem.jpg";
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
 
     console.log("Download concluído para a imagem:", imageId);
-  } else {
-    console.log("Erro: ID da imagem não encontrado na URL:", url);
+  } catch (error) {
+    console.error("Erro durante o download:", error);
+  } finally {
+    // Remove o loader e restaura o modo padrão exato
+    if (container) {
+      const link = container.querySelector("a");
+      if (link) {
+        // Remove o loader (se existir) dentro do link
+        const loaderElem = link.querySelector(".loader");
+        if (loaderElem) loaderElem.remove();
+        // Remove os estilos inline pra voltar ao padrão (estilo original que você já tinha)
+        link.removeAttribute("style");
+      }
+      // Remove o filtro de brightness da imagem
+      img.removeAttribute("style");
+    }
   }
 }
+
 
 // Inicializa eventos e carregamento
 document.addEventListener("DOMContentLoaded", function () {
