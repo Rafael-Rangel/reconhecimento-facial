@@ -170,7 +170,7 @@ function toggleImageSelection(container, imageId) {
   }
 }
 
-// Envia selfie para comparação
+  // Função que envia selfie pra reconhecimento facial
 async function uploadSelfie() {
   const fileInput = document.getElementById("fileInput");
   const cameraInput = document.getElementById("cameraInput");
@@ -194,9 +194,10 @@ async function uploadSelfie() {
     const formData = new FormData();
     formData.append("file", file);
 
-    const data = await apiRequest(`/albums/${albumId}/upload-selfie?max_faces=4096&threshold=70`, {
+    // Chama a API de reconhecimento facial
+    const data = await apiRequest(`/albums/${albumId}/recognize-face`, {
       method: "POST",
-      body: formData
+      body: formData,
     });
 
     if (!data.matches || data.matches.length === 0) {
@@ -206,6 +207,7 @@ async function uploadSelfie() {
 
     displayMatchingImages(data.matches);
   } catch (error) {
+    console.error("Erro ao processar sua imagem:", error);
     gallery.innerHTML = "<p>Erro ao processar sua imagem. Tente novamente mais tarde.</p>";
   }
 }
