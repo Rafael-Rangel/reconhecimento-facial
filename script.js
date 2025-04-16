@@ -112,27 +112,6 @@ async function loadAlbums() {
   }
 }
 
-// Função para processar imagens do álbum
-async function processAlbumImages(albumId) {
-  console.log(`Iniciando o processamento das imagens do álbum: ${albumId}...`);
-
-  try {
-    const response = await apiRequest(`/albums/${albumId}/process-images`, {
-      method: "POST",
-    });
-
-    console.log("Resposta da API para processamento:", response);
-
-    if (response.message) {
-      console.log(`Mensagem da API: ${response.message}`);
-    }
-
-    console.log(`Processamento concluído. Total de imagens indexadas: ${response.total_indexed}`);
-  } catch (error) {
-    console.error("Erro ao processar as imagens do álbum:", error);
-    alert("Erro ao processar as imagens do álbum. Tente novamente mais tarde.");
-  }
-}
 
 // Atualiza o álbum com otimização
 async function refreshAlbum(albumId, isInitialLoad = false) {
