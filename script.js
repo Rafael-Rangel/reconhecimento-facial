@@ -1,4 +1,4 @@
-https://projetofotografo.zapto.org/api";
+const API_URL = "https://projetofotografo.zapto.org/api";
 let selectedImages = [];
 let imageMap = {};
 let isProcessing = false;
