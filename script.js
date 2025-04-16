@@ -121,25 +121,25 @@ async function refreshAlbum(albumId) {
     return;
   }
 
-  gallery.innerHTML = '<div class="loader"></div>'; // Mostra o loader
+  // Mostra o loader enquanto carrega todas as imagens
+  gallery.innerHTML = '<div class="loader"></div>';
 
   try {
-    // Requisição única pra buscar todas as imagens
-    const endpoint = `/albums/${albumId}/process-images`;
+    // Faz a requisição única pra pegar todas as imagens usando page_size=999
+    const endpoint = `/albums/${albumId}/process-images?page_size=999`;
     const data = await apiRequest(endpoint, { method: "POST" });
 
-    // Verifica se vieram imagens
+    // Verifica se a resposta trouxe imagens
     if (!Array.isArray(data.images) || data.images.length === 0) {
-      gallery.innerHTML = "<p>Nenhuma imagem encontrada.</p>";
+      gallery.innerHTML = "<p>Nenhuma imagem disponível.</p>";
       return;
     }
 
-    // Cria os elementos e coloca na galeria
+    // Cria os elementos das imagens e adiciona no DOM
     const fragment = document.createDocumentFragment();
     data.images.forEach(image => {
       const container = document.createElement("div");
       container.classList.add("photo-container");
-
       container.innerHTML = `
         <a href="https://drive.google.com/uc?id=${image.id}&export=download" download>
           <img src="https://drive.google.com/thumbnail?id=${image.id}" alt="${image.name}" class="fade-in">
@@ -149,14 +149,15 @@ async function refreshAlbum(albumId) {
       fragment.appendChild(container);
     });
 
-    gallery.innerHTML = ""; // Limpa o loader
-    gallery.appendChild(fragment); // Exibe as imagens
-    console.log(`✅ Carregadas ${data.images.length} imagens.`);
+    gallery.innerHTML = "";
+    gallery.appendChild(fragment);
+    console.log("Imagens carregadas:", data.images.length);
   } catch (error) {
-    console.error("❌ Erro ao carregar as imagens:", error);
+    console.error("Erro ao carregar as imagens:", error);
     gallery.innerHTML = "<p>Erro ao carregar as imagens. Tente novamente mais tarde.</p>";
   }
 }
+
 
 
 // Alterna a seleção de imagens
