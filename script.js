@@ -233,6 +233,17 @@ function displayMatchingImages(matches) {
   gallery.appendChild(fragment);
 }
 
+// Desleciona todas as fotos
+document.getElementById("deselect-all-btn").addEventListener("click", () => { 
+  const containers = document.querySelectorAll(".photo-container");
+  selectedImages = [];
+  containers.forEach(container => {
+    // Remove a classe "selected" de cada container, se estiver presente
+    container.classList.remove("selected");
+  });
+  console.log("Todas desmarcadas:", selectedImages);
+});
+
 // Seleciona todas as fotos
 document.getElementById("select-all-btn").addEventListener("click", () => {
   const containers = document.querySelectorAll(".photo-container");
