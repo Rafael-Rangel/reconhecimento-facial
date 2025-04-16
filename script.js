@@ -9,7 +9,7 @@ let hasMoreImages = true; // Indica se há mais imagens para carregar
 // Função genérica para requisições à API
 async function apiRequest(endpoint, options = {}) {
   try {
-    const response = await fetch(${API_URL}${endpoint}, options);
+    const response = await fetch(`${API_URL}${endpoint}`, options);
     if (!response.ok) {
       throw new Error(Erro na API: ${response.status} - ${response.statusText});
     }
