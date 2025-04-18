@@ -727,4 +727,13 @@ input:focus, textarea:focus, select:focus {
     grid-template-columns: repeat(1, 1fr);
 }
 
+@media (max-width: 880px) {
+    div#album-container {
+        flex-direction: column;
+        align-items: center;
+    }
+
+button#updateAlbumBtn {
+    width: 50%;
+}
 
