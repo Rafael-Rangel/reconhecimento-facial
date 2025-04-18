@@ -169,8 +169,9 @@ function toggleImageSelection(container, imageId) {
 }
 
   // Função que envia selfie pra reconhecimento facial
-async function uploadSelfie() {
-  const fileInput = document.getElementById("fileInput");
+async function uploadSelfie(e) {
+  e.preventDefault(); // ⛔️ bloqueia o reload
+  const fileInput   = document.getElementById("fileInput");
   const cameraInput = document.getElementById("cameraInput");
   const file = cameraInput?.files[0] || fileInput?.files[0];
 
