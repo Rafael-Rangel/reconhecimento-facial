@@ -90,17 +90,6 @@
 }
 
 
-@media (max-width: 740px) {
-  #image-gallery {
-    #image-gallery {
-    display: grid;
-    gap: 10px;
-    grid-template-columns: repeat(2, 1fr);
-    max-width: 1600px;
-    margin: 0 auto;
-}
-  }
-}
 html{
   overflow: auto;          
   -ms-overflow-style: none; 
@@ -188,6 +177,27 @@ h2 {
   grid-template-columns: repeat(4, 1fr); /* Começa com 4 colunas */
   max-width: 1600px; /* 8 colunas * 200px (aprox.) */
   margin: 0 auto; /* Centraliza o grid */
+}
+
+@media (max-width: 515px) {
+    #image-gallery {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(1, 1fr) !important;
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+}
+
+@media (max-width: 740px) {
+    #image-gallery {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(2, 1fr) !important;
+    max-width: 1600px;
+    margin: 0 auto;
+  }
 }
 
 /* Aumenta pra 5 colunas a partir de 900px de largura */
