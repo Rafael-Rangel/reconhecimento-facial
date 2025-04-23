@@ -733,9 +733,11 @@ input:focus, textarea:focus, select:focus {
         align-items: center;
     }
 
-button#updateAlbumBtn {
-    width: 50%;
-}
+    button#updateAlbumBtn {
+        width: fit-content;
+        height: fit-content;
+        min-width: 130px;
+    }
 a.linksdevolta {
     width: 100vw !important;
     display: block;
