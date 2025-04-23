@@ -736,4 +736,10 @@ input:focus, textarea:focus, select:focus {
 button#updateAlbumBtn {
     width: 50%;
 }
-
+a.linksdevolta {
+    width: 100vw !important;
+    display: block;
+    text-align: center;
+    margin-bottom: 10px;
+}
+}
