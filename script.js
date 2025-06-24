@@ -1,4 +1,4 @@
-const API_URL = "dev.uvfotoevideo.com.br/api";
+const API_URL = "https://dev.uvfotoevideo.com.br/api";
 let selectedImages = [];
 let imageMap = {};
 let isProcessing = false;
