@@ -1,0 +1,33 @@
+# .github/workflows/indexar-albums.yml
+name: Indexar Álbuns Diariamente
+
+on:
+  schedule:
+    - cron: '0 3 * * *' # Todo dia às 3:00 AM (UTC)
+  workflow_dispatch: # Permite executar manualmente
+
+jobs:
+  indexar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Indexar Todos os Álbuns
+        run: |
+          # 1. Buscar lista de álbuns
+          echo "🔍 Buscando lista de álbuns..."
+          ALBUMS=$(curl -s "https://dev.uvfotoevideo.com.br/api/main/folders" | jq -r '.folders[] | select(.name | ascii_downcase != "fotoscapas") | .id')
+          
+          # 2. Indexar cada álbum
+          for ALBUM_ID in $ALBUMS; do
+            echo "🔄 Indexando álbum: $ALBUM_ID"
+            curl -X POST "https://dev.uvfotoevideo.com.br/api/albums/$ALBUM_ID/process-images" \
+                 -H "Content-Type: application/json" \
+                 --max-time 300 \
+                 --retry 3 \
+                 --retry-delay 10
+            
+            # Aguarda 5 segundos entre cada álbum
+            echo "⏳ Aguardando 5 segundos..."
+            sleep 5
+          done
+          
+          echo "✅ Indexação completa!"
