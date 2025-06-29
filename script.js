@@ -58,7 +58,7 @@ async function loadAlbums() {
   albumContainer.innerHTML = `
     <div class="loading-container">
       <div class="loader"></div>
-      <p class="loading-message">📁 Carregando álbuns...</p>
+      <p class="loading-message">Carregando álbuns...</p>
     </div>
   `;
 
@@ -78,7 +78,7 @@ async function loadAlbums() {
     );
     console.log("Álbuns filtrados (sem FotosCapas):", filteredAlbums);
 
-    // 🔄 MUDANÇA: Usa /images em vez de /process-images para capas
+    // Usa /images em vez de /process-images para capas
     let fotosCapas = [];
     try {
       const capasData = await apiRequest("/albums/1w3_3QJ0AMf-K6wqNHJPw4d5aWDekHTvN/images");
@@ -103,7 +103,7 @@ async function loadAlbums() {
         return lowerAlbumName === lowerImageName;
       });
 
-      // 🔄 MUDANÇA: Usa public_url se disponível
+      // Usa public_url se disponível
       const capaUrl = fotoCapa
         ? (fotoCapa.public_url || `https://drive.google.com/thumbnail?id=${fotoCapa.id}`)
         : "https://placehold.co/300x200?text=Sem+Capa";
@@ -126,8 +126,8 @@ async function loadAlbums() {
     console.error("Erro ao carregar os álbuns:", error);
     albumContainer.innerHTML = `
       <div class="error-container">
-        <p>❌ Erro ao carregar os álbuns</p>
-        <button onclick="loadAlbums()" class="retry-btn">🔄 Tentar Novamente</button>
+        <p>Erro ao carregar os álbuns</p>
+        <button onclick="loadAlbums()" class="retry-btn">Tentar Novamente</button>
       </div>
     `;
   } finally {
@@ -135,7 +135,7 @@ async function loadAlbums() {
   }
 }
 
-// 🔄 MUDANÇA PRINCIPAL: Carrega imagens normais (sem indexação)
+// Carrega imagens normais (sem indexação)
 async function refreshAlbum(albumId) {
   const gallery = document.getElementById("image-gallery");
   if (!gallery) {
@@ -147,12 +147,12 @@ async function refreshAlbum(albumId) {
   gallery.innerHTML = `
     <div class="loading-container">
       <div class="loader"></div>
-      <p class="loading-message">📷 Carregando suas fotos...</p>
+      <p class="loading-message">Carregando suas fotos...</p>
     </div>
   `;
 
   try {
-    // 🔄 MUDANÇA: Usa /images em vez de /process-images
+    // Usa /images em vez de /process-images
     const data = await apiRequest(`/albums/${albumId}/images`);
 
     // Verifica se a resposta trouxe imagens
@@ -167,7 +167,7 @@ async function refreshAlbum(albumId) {
       const container = document.createElement("div");
       container.classList.add("photo-container");
       
-      // 🔄 MUDANÇA: Usa public_url se disponível
+      // Usa public_url se disponível
       const imageUrl = image.public_url || `https://drive.google.com/thumbnail?id=${image.id}`;
       
       container.innerHTML = `
@@ -189,16 +189,16 @@ async function refreshAlbum(albumId) {
     console.error("Erro ao carregar as imagens:", error);
     gallery.innerHTML = `
       <div class="error-container">
-        <p>❌ Erro ao carregar as imagens do álbum</p>
+        <p>Erro ao carregar as imagens do álbum</p>
         <button onclick="refreshAlbum('${albumId}')" class="retry-btn">
-          🔄 Tentar Novamente
+          Tentar Novamente
         </button>
       </div>
     `;
   }
 }
 
-// 🔄 MUDANÇA: Nova função de reconhecimento facial
+// Nova função de reconhecimento facial
 async function uploadSelfie(e) {
   e.preventDefault();
   
@@ -221,7 +221,7 @@ async function uploadSelfie(e) {
   gallery.innerHTML = `
     <div class="loading-container">
       <div class="loader"></div>
-      <p class="loading-message">🔍 Analisando sua foto e buscando correspondências...</p>
+      <p class="loading-message">Analisando sua foto e buscando correspondências...</p>
     </div>
   `;
 
@@ -229,7 +229,7 @@ async function uploadSelfie(e) {
     const formData = new FormData();
     formData.append("file", file);
 
-    // 🔄 MUDANÇA: Nova rota /upload-selfie com parâmetros
+    // Nova rota /upload-selfie com parâmetros
     const data = await apiRequest(`/albums/${albumId}/upload-selfie?threshold=85&max_faces=20`, {
       method: "POST",
       body: formData,
@@ -240,41 +240,34 @@ async function uploadSelfie(e) {
     if (!data.matches || data.matches.length === 0) {
       gallery.innerHTML = `
         <div class="no-matches">
-          <p>😔 Nenhuma correspondência encontrada</p>
+          <p>Nenhuma correspondência encontrada</p>
           <p>Tente com uma foto mais clara do seu rosto</p>
           <button onclick="refreshAlbum('${albumId}')" class="retry-btn">
-            📷 Ver todas as fotos do álbum
+            Ver todas as fotos do álbum
           </button>
         </div>
       `;
       return;
     }
 
-    // Mostra quantas fotos foram encontradas
-    const matchInfo = document.createElement("div");
-    matchInfo.className = "match-info";
-    matchInfo.innerHTML = `
-      <p>✅ Encontramos <strong>${data.total_matches}</strong> foto(s) sua(s)!</p>
-    `;
+    // Remove a mensagem e limpa a galeria para mostrar apenas as imagens
     gallery.innerHTML = "";
-    gallery.appendChild(matchInfo);
-
     displayMatchingImages(data.matches);
   } catch (error) {
     console.error("Erro ao processar sua imagem:", error);
     gallery.innerHTML = `
       <div class="error-container">
-        <p>❌ Erro ao processar sua imagem</p>
+        <p>Erro ao processar sua imagem</p>
         <p>Verifique se o álbum foi indexado ou tente novamente</p>
         <button onclick="refreshAlbum('${albumId}')" class="retry-btn">
-          📷 Ver todas as fotos
+          Ver todas as fotos
         </button>
       </div>
     `;
   }
 }
 
-// 🔄 MUDANÇA: Exibe correspondências com confidence
+// Exibe correspondências com confidence
 function displayMatchingImages(matches) {
   const gallery = document.getElementById("image-gallery");
   if (!gallery) return;
@@ -288,7 +281,7 @@ function displayMatchingImages(matches) {
     // Adiciona informação de confiança se disponível
     const confidence = match.confidence ? `${Math.round(match.confidence)}%` : '';
     
-    // 🔄 MUDANÇA: Usa public_url se disponível
+    // Usa public_url se disponível
     const imageUrl = match.public_url || `https://drive.google.com/thumbnail?id=${match.image_id}`;
     
     container.innerHTML = `
@@ -490,7 +483,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const albumId = new URLSearchParams(window.location.search).get("album");
 
   if (albumId) {
-    console.log("🚀 Página carregada dentro de um álbum");
+    console.log("Página carregada dentro de um álbum");
     refreshAlbum(albumId);
   }
 
@@ -498,7 +491,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const updateButton = document.getElementById("updateAlbumBtn");
   if (updateButton) {
     updateButton.addEventListener("click", () => {
-      console.log("🔄 Botão 'Atualizar Álbum' clicado!");
+      console.log("Botão 'Atualizar Álbum' clicado!");
       refreshAlbum(albumId);
     });
   }
