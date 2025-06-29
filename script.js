@@ -242,7 +242,7 @@ async function uploadSelfie(e) {
         <div class="no-matches">
           <p>Nenhuma correspondência encontrada</p>
           <p>Tente com uma foto mais clara do seu rosto</p>
-          <button onclick="refreshAlbum('${albumId}')" class="retry-btn">
+          <button onclick="refreshAlbum('${albumId}')" style="border-color: #E01F34;box-shadow: 0 1px 3px 0 rgba(0, 0, 0, .13);cursor: pointer;margin-top: 5px;" class="retry-btn">
             Ver todas as fotos do álbum
           </button>
         </div>
