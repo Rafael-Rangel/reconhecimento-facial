@@ -153,7 +153,7 @@ async function refreshAlbum(albumId) {
 
   try {
     // Usa /images em vez de /process-images
-    const data = await apiRequest(`/albums/${albumId}/images?limit=500`);
+    const data = await apiRequest(`/albums/${albumId}/images?page_size=500`);
 
     // Verifica se a resposta trouxe imagens
     if (!Array.isArray(data.images) || data.images.length === 0) {
@@ -501,4 +501,5 @@ document.addEventListener("DOMContentLoaded", function () {
 window.loadAlbums = loadAlbums;
 window.refreshAlbum = refreshAlbum;
 window.uploadSelfie = uploadSelfie;
+
 
