@@ -31,6 +31,13 @@ async function checkAndLoadMore(albumId) {
         return; // Sai se já estiver carregando ou se não houver mais páginas
     }
 
+    // Pega o título de reconhecimento
+    const title = document.getElementById('recognition-title');
+    // Se o título estiver visível, a função para aqui e não carrega mais nada.
+    if (title && title.style.display === 'block') {
+        return;
+    }
+
     // Verifica se a página tem barra de rolagem vertical
     const hasScrollbar = document.body.scrollHeight > document.body.clientHeight;
 
@@ -401,4 +408,3 @@ document.addEventListener("DOMContentLoaded", function () {
 // Expõe funções globalmente para serem usadas no HTML (onclick)
 window.refreshAlbum = refreshAlbum;
 window.uploadSelfie = uploadSelfie;
-// A função loadAlbums não precisa ser exposta globalmente, pois não é chamada pelo HTML
