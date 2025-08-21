@@ -4,10 +4,13 @@ let imageMap = {};
 let isProcessing = false;
 let isLoadingAlbums = false;
 
-// --- NOVAS VARIÁVEIS PARA PAGINAÇÃO ---
+// --- VARIÁVEIS DE PAGINAÇÃO ---
 let currentPageToken = null;
 let isLoadingMore = false; // Controla para não carregar várias páginas ao mesmo tempo
 const PAGE_SIZE = 200; // Define o tamanho da página para 200 imagens
+
+// --- FLAG DE CONTROLE PARA RECONHECIMENTO FACIAL ---
+let isRecognitionInProgress = false;
 
 // Função genérica para requisições à API com melhor tratamento de erros
 async function apiRequest(endpoint, options = {} ) {
@@ -49,7 +52,7 @@ function debounce(func, delay) {
   };
 }
 
-// Carrega álbuns com otimização e define as capas (sem alterações aqui)
+// Carrega álbuns com otimização e define as capas
 async function loadAlbums() {
   if (isLoadingAlbums) return;
   isLoadingAlbums = true;
@@ -98,7 +101,7 @@ async function loadAlbums() {
       });
 
       const capaUrl = fotoCapa
-        ? (fotoCapa.public_url || `https://drive.google.com/thumbnail?id=${fotoCapa.id}` )
+        ? (fotoCapa.public_url || `https://drive.google.com/thumbnail?id=${fotoCapa.id}`  )
         : "https://placehold.co/300x200?text=Sem+Capa";
 
       albumCard.innerHTML = `
@@ -130,13 +133,15 @@ async function loadAlbums() {
 }
 
 // --- FUNÇÃO REFRESH ALBUM ATUALIZADA ---
-// Agora ela apenas limpa a galeria e inicia o carregamento da primeira página.
 async function refreshAlbum(albumId) {
   const gallery = document.getElementById("image-gallery");
   if (!gallery) {
     console.error("Elemento 'image-gallery' não encontrado.");
     return;
   }
+
+  // Garante que a flag de reconhecimento seja desativada ao recarregar o álbum
+  isRecognitionInProgress = false;
 
   // Reseta o estado da paginação para um novo carregamento
   currentPageToken = null;
@@ -153,20 +158,18 @@ async function refreshAlbum(albumId) {
   await loadMoreImages(albumId);
 }
 
-// --- NOVA FUNÇÃO PARA CARREGAR IMAGENS (PAGINADO) ---
+// --- FUNÇÃO PARA CARREGAR IMAGENS (PAGINADO) ---
 async function loadMoreImages(albumId) {
   if (isLoadingMore) return; // Previne carregamentos simultâneos
   isLoadingMore = true;
 
   const gallery = document.getElementById("image-gallery");
   
-  // Constrói a URL da API com os parâmetros de paginação
   let endpoint = `/albums/${albumId}/images?page_size=${PAGE_SIZE}`;
   if (currentPageToken) {
     endpoint += `&page_token=${currentPageToken}`;
   }
 
-  // Adiciona um loader no final da galeria se não for a primeira carga
   const loaderId = 'loading-more-spinner';
   if (currentPageToken && !document.getElementById(loaderId)) {
       const loaderDiv = document.createElement('div');
@@ -179,16 +182,15 @@ async function loadMoreImages(albumId) {
   try {
     const data = await apiRequest(endpoint);
 
-    // Se for a primeira carga, limpa o loader inicial
     if (!currentPageToken) {
       gallery.innerHTML = ""; 
     }
 
     if (!Array.isArray(data.images) || data.images.length === 0) {
-      if (!currentPageToken) { // Só mostra mensagem se for a primeira página e não vier nada
+      if (!currentPageToken) {
         gallery.innerHTML = "<p>Nenhuma imagem disponível neste álbum.</p>";
       }
-      currentPageToken = null; // Indica que não há mais páginas
+      currentPageToken = null;
       return;
     }
 
@@ -214,12 +216,11 @@ async function loadMoreImages(albumId) {
     gallery.appendChild(fragment);
     console.log(`loadMoreImages: ${data.images.length} imagens carregadas.`);
     
-    // Atualiza o token para a próxima requisição. Se não vier, será null.
     currentPageToken = data.next_page_token || null;
 
   } catch (error) {
     console.error("Erro ao carregar as imagens:", error);
-    if (!currentPageToken) { // Só mostra erro se falhar na primeira página
+    if (!currentPageToken) {
         gallery.innerHTML = `
           <div class="error-container">
             <p>Erro ao carregar as imagens do álbum</p>
@@ -228,32 +229,35 @@ async function loadMoreImages(albumId) {
         `;
     }
   } finally {
-    // Remove o loader de "carregando mais"
     const loaderDiv = document.getElementById(loaderId);
     if (loaderDiv) {
         loaderDiv.remove();
     }
-    isLoadingMore = false; // Libera para a próxima requisição
+    isLoadingMore = false;
   }
 }
 
-
-// Nova função de reconhecimento facial (sem alterações aqui)
+// --- FUNÇÃO DE RECONHECIMENTO FACIAL ATUALIZADA ---
 async function uploadSelfie(e) {
   e.preventDefault();
   
+  // ATIVA A FLAG para bloquear a paginação por scroll
+  isRecognitionInProgress = true;
+
   const fileInput = document.getElementById("fileInput");
   const cameraInput = document.getElementById("cameraInput");
   const file = cameraInput?.files[0] || fileInput?.files[0];
 
   if (!file) {
     alert("Selecione uma imagem para enviar.");
+    isRecognitionInProgress = false; // Libera a flag se não houver arquivo
     return;
   }
 
   const albumId = new URLSearchParams(window.location.search).get("album");
   if (!albumId) {
     console.error("Nenhum albumId encontrado!");
+    isRecognitionInProgress = false; // Libera a flag se não houver ID do álbum
     return;
   }
 
@@ -284,6 +288,7 @@ async function uploadSelfie(e) {
           </button>
         </div>
       `;
+      // O finally cuidará de resetar a flag
       return;
     }
 
@@ -300,10 +305,13 @@ async function uploadSelfie(e) {
         </button>
       </div>
     `;
+  } finally {
+    // DESATIVA A FLAG ao final do processo, permitindo a paginação novamente
+    isRecognitionInProgress = false;
   }
 }
 
-// Exibe correspondências com confidence (sem alterações aqui)
+// Exibe imagens correspondentes
 function displayMatchingImages(matches) {
   const gallery = document.getElementById("image-gallery");
   if (!gallery) return;
@@ -341,7 +349,7 @@ function extractImageId(url) {
   return idMatch ? idMatch[1] : null;
 }
 
-// Função para baixar imagens selecionadas (sem alterações aqui)
+// Função para baixar imagens selecionadas
 async function downloadSelectedImages(selectedIds) {
   const zip = new JSZip();
   const imgFolder = zip.folder("imagens");
@@ -371,7 +379,7 @@ async function downloadSelectedImages(selectedIds) {
   });
 }
 
-// Função para alternar seleção (sem alterações aqui)
+// Função para alternar seleção
 function toggleSelection(photoContainer) {
   photoContainer.classList.toggle("selected");
   
@@ -391,7 +399,7 @@ function toggleSelection(photoContainer) {
   console.log("Estado atual das imagens selecionadas:", selectedImages);
 }
 
-// Função para download individual (sem alterações aqui)
+// Função para download individual
 async function downloadImage(img) {
   const imageId = img.dataset.imageId || extractImageId(img.src);
   if (!imageId) {
@@ -451,13 +459,14 @@ document.addEventListener("DOMContentLoaded", function () {
     refreshAlbum(albumId);
   }
 
-  // --- EVENTO DE SCROLL PARA PAGINAÇÃO INFINITA ---
+  // --- EVENTO DE SCROLL ATUALIZADO ---
   window.addEventListener('scroll', () => {
     // Condições para carregar mais:
-    // 1. Não estar carregando algo no momento (isLoadingMore).
-    // 2. Ter um token para a próxima página (currentPageToken).
-    // 3. O usuário ter rolado até perto do final da página (offsetHeight - 500px).
-    if (!isLoadingMore && currentPageToken && (window.innerHeight + window.scrollY) >= document.body.offsetHeight - 500) {
+    // 1. Não estar carregando (isLoadingMore).
+    // 2. O RECONHECIMENTO FACIAL NÃO ESTAR EM ANDAMENTO (isRecognitionInProgress).
+    // 3. Ter um token para a próxima página (currentPageToken).
+    // 4. O usuário ter rolado até perto do final da página.
+    if (!isLoadingMore && !isRecognitionInProgress && currentPageToken && (window.innerHeight + window.scrollY) >= document.body.offsetHeight - 500) {
         console.log("Fim da página alcançado, carregando mais imagens...");
         loadMoreImages(albumId);
     }
@@ -514,13 +523,11 @@ document.addEventListener("DOMContentLoaded", function () {
     const photoContainer = event.target.closest(".photo-container");
     if (!photoContainer) return;
 
-    // Clique no círculo de seleção
     if (event.target.classList.contains("selection-circle")) {
       toggleSelection(photoContainer);
       return;
     }
 
-    // Clique na imagem para download
     if (event.target.tagName === "IMG") {
       event.stopPropagation();
       downloadImage(event.target);
