@@ -4,8 +4,13 @@ let imageMap = {};
 let isProcessing = false;
 let isLoadingAlbums = false;
 
+// --- NOVAS VARIÁVEIS PARA PAGINAÇÃO ---
+let currentPageToken = null;
+let isLoadingMore = false; // Controla para não carregar várias páginas ao mesmo tempo
+const PAGE_SIZE = 200; // Define o tamanho da página para 200 imagens
+
 // Função genérica para requisições à API com melhor tratamento de erros
-async function apiRequest(endpoint, options = {}) {
+async function apiRequest(endpoint, options = {} ) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
 
@@ -44,7 +49,7 @@ function debounce(func, delay) {
   };
 }
 
-// Carrega álbuns com otimização e define as capas
+// Carrega álbuns com otimização e define as capas (sem alterações aqui)
 async function loadAlbums() {
   if (isLoadingAlbums) return;
   isLoadingAlbums = true;
@@ -63,49 +68,37 @@ async function loadAlbums() {
   `;
 
   try {
-    // Busca a lista de álbuns
     const data = await apiRequest("/main/folders");
-    console.log("Álbuns retornados pela API:", data.folders);
-
     if (!Array.isArray(data.folders) || data.folders.length === 0) {
       albumContainer.innerHTML = "<p>Nenhum álbum disponível.</p>";
       return;
     }
 
-    // Filtra o álbum FotosCapas para que ele não seja exibido
     const filteredAlbums = data.folders.filter(album => 
       album.name.trim().toLowerCase() !== "fotoscapas"
     );
-    console.log("Álbuns filtrados (sem FotosCapas):", filteredAlbums);
 
-    // Usa /images em vez de /process-images para capas
     let fotosCapas = [];
     try {
       const capasData = await apiRequest("/albums/1w3_3QJ0AMf-K6wqNHJPw4d5aWDekHTvN/images");
       fotosCapas = capasData.images || [];
-      console.log("Imagens de capa carregadas:", fotosCapas);
     } catch (error) {
       console.error("Erro ao carregar imagens de capa:", error);
     }
 
     const fragment = document.createDocumentFragment();
     filteredAlbums.forEach(album => {
-      console.log(`Processando álbum: ${album.name}`);
-
       const albumCard = document.createElement("div");
       albumCard.classList.add("album-card");
 
-      // Busca a imagem de capa correspondente
       const fotoCapa = fotosCapas.find(img => {
         const lowerAlbumName = album.name.trim().toLowerCase();
         const lowerImageName = img.name.trim().toLowerCase().replace(/\.(jpg|jpeg|png)$/, "");
-        console.log(`Comparando álbum "${lowerAlbumName}" com imagem "${lowerImageName}"`);
         return lowerAlbumName === lowerImageName;
       });
 
-      // Usa public_url se disponível
       const capaUrl = fotoCapa
-        ? (fotoCapa.public_url || `https://drive.google.com/thumbnail?id=${fotoCapa.id}`)
+        ? (fotoCapa.public_url || `https://drive.google.com/thumbnail?id=${fotoCapa.id}` )
         : "https://placehold.co/300x200?text=Sem+Capa";
 
       albumCard.innerHTML = `
@@ -116,7 +109,7 @@ async function loadAlbums() {
         >
         <h3>${album.name}</h3>
       `;
-      albumCard.onclick = () => window.location.href = `album.html?album=${album.id}`;
+      albumCard.onclick = ( ) => window.location.href = `album.html?album=${album.id}`;
       fragment.appendChild(albumCard);
     });
 
@@ -135,7 +128,8 @@ async function loadAlbums() {
   }
 }
 
-// Carrega imagens normais (sem indexação)
+// --- FUNÇÃO REFRESH ALBUM ATUALIZADA ---
+// Agora ela apenas limpa a galeria e inicia o carregamento da primeira página.
 async function refreshAlbum(albumId) {
   const gallery = document.getElementById("image-gallery");
   if (!gallery) {
@@ -143,7 +137,10 @@ async function refreshAlbum(albumId) {
     return;
   }
 
-  // Mostra loader com mensagem específica
+  // Reseta o estado da paginação para um novo carregamento
+  currentPageToken = null;
+  isLoadingMore = false; 
+  
   gallery.innerHTML = `
     <div class="loading-container">
       <div class="loader"></div>
@@ -151,23 +148,54 @@ async function refreshAlbum(albumId) {
     </div>
   `;
 
-  try {
-    // Usa /images em vez de /process-images
-    const data = await apiRequest(`/albums/${albumId}/images?page_size=1000`);
+  // Chama a função para carregar as imagens (a primeira página)
+  await loadMoreImages(albumId);
+}
 
-    // Verifica se a resposta trouxe imagens
+// --- NOVA FUNÇÃO PARA CARREGAR IMAGENS (PAGINADO) ---
+async function loadMoreImages(albumId) {
+  if (isLoadingMore) return; // Previne carregamentos simultâneos
+  isLoadingMore = true;
+
+  const gallery = document.getElementById("image-gallery");
+  
+  // Constrói a URL da API com os parâmetros de paginação
+  let endpoint = `/albums/${albumId}/images?page_size=${PAGE_SIZE}`;
+  if (currentPageToken) {
+    endpoint += `&page_token=${currentPageToken}`;
+  }
+
+  // Adiciona um loader no final da galeria se não for a primeira carga
+  const loaderId = 'loading-more-spinner';
+  if (currentPageToken && !document.getElementById(loaderId)) {
+      const loaderDiv = document.createElement('div');
+      loaderDiv.id = loaderId;
+      loaderDiv.className = 'loading-container';
+      loaderDiv.innerHTML = `<div class="loader"></div><p>Carregando mais fotos...</p>`;
+      gallery.appendChild(loaderDiv);
+  }
+
+  try {
+    const data = await apiRequest(endpoint);
+
+    // Se for a primeira carga, limpa o loader inicial
+    if (!currentPageToken) {
+      gallery.innerHTML = ""; 
+    }
+
     if (!Array.isArray(data.images) || data.images.length === 0) {
-      gallery.innerHTML = "<p>Nenhuma imagem disponível neste álbum.</p>";
+      if (!currentPageToken) { // Só mostra mensagem se for a primeira página e não vier nada
+        gallery.innerHTML = "<p>Nenhuma imagem disponível neste álbum.</p>";
+      }
+      currentPageToken = null; // Indica que não há mais páginas
       return;
     }
 
-    // Cria os elementos das imagens
     const fragment = document.createDocumentFragment();
     data.images.forEach(image => {
       const container = document.createElement("div");
       container.classList.add("photo-container");
       
-      // Usa public_url se disponível
       const imageUrl = image.public_url || `https://drive.google.com/thumbnail?id=${image.id}`;
       
       container.innerHTML = `
@@ -179,26 +207,36 @@ async function refreshAlbum(albumId) {
         >
         <div class="selection-circle"></div>
       `;
-      fragment.appendChild(container);
+      fragment.appendChild(container );
     });
 
-    gallery.innerHTML = "";
     gallery.appendChild(fragment);
-    console.log("Imagens carregadas:", data.images.length);
+    
+    // Atualiza o token para a próxima requisição. Se não vier, será null.
+    currentPageToken = data.next_page_token || null;
+
   } catch (error) {
     console.error("Erro ao carregar as imagens:", error);
-    gallery.innerHTML = `
-      <div class="error-container">
-        <p>Erro ao carregar as imagens do álbum</p>
-        <button onclick="refreshAlbum('${albumId}')" class="retry-btn">
-          Tentar Novamente
-        </button>
-      </div>
-    `;
+    if (!currentPageToken) { // Só mostra erro se falhar na primeira página
+        gallery.innerHTML = `
+          <div class="error-container">
+            <p>Erro ao carregar as imagens do álbum</p>
+            <button onclick="refreshAlbum('${albumId}')" class="retry-btn">Tentar Novamente</button>
+          </div>
+        `;
+    }
+  } finally {
+    // Remove o loader de "carregando mais"
+    const loaderDiv = document.getElementById(loaderId);
+    if (loaderDiv) {
+        loaderDiv.remove();
+    }
+    isLoadingMore = false; // Libera para a próxima requisição
   }
 }
 
-// Nova função de reconhecimento facial
+
+// Nova função de reconhecimento facial (sem alterações aqui)
 async function uploadSelfie(e) {
   e.preventDefault();
   
@@ -229,13 +267,10 @@ async function uploadSelfie(e) {
     const formData = new FormData();
     formData.append("file", file);
 
-    // Nova rota /upload-selfie com parâmetros
     const data = await apiRequest(`/albums/${albumId}/upload-selfie?threshold=85&max_faces=20`, {
       method: "POST",
       body: formData,
     });
-
-    console.log("Resposta do reconhecimento:", data);
 
     if (!data.matches || data.matches.length === 0) {
       gallery.innerHTML = `
@@ -250,7 +285,6 @@ async function uploadSelfie(e) {
       return;
     }
 
-    // Remove a mensagem e limpa a galeria para mostrar apenas as imagens
     gallery.innerHTML = "";
     displayMatchingImages(data.matches);
   } catch (error) {
@@ -267,7 +301,7 @@ async function uploadSelfie(e) {
   }
 }
 
-// Exibe correspondências com confidence
+// Exibe correspondências com confidence (sem alterações aqui)
 function displayMatchingImages(matches) {
   const gallery = document.getElementById("image-gallery");
   if (!gallery) return;
@@ -278,10 +312,7 @@ function displayMatchingImages(matches) {
     const container = document.createElement("div");
     container.classList.add("photo-container", "match-result");
     
-    // Adiciona informação de confiança se disponível
     const confidence = match.confidence ? `${Math.round(match.confidence)}%` : '';
-    
-    // Usa public_url se disponível
     const imageUrl = match.public_url || `https://drive.google.com/thumbnail?id=${match.image_id}`;
     
     container.innerHTML = `
@@ -295,59 +326,11 @@ function displayMatchingImages(matches) {
       ${confidence ? `<div class="confidence-badge">${confidence}</div>` : ''}
     `;
     
-    fragment.appendChild(container);
+    fragment.appendChild(container );
   });
 
   gallery.appendChild(fragment);
 }
-
-// Controles de seleção
-document.addEventListener("DOMContentLoaded", function() {
-  // Deselecionar todas
-  const deselectBtn = document.getElementById("deselect-all-btn");
-  if (deselectBtn) {
-    deselectBtn.addEventListener("click", () => {
-      const containers = document.querySelectorAll(".photo-container");
-      selectedImages = [];
-      containers.forEach(container => {
-        container.classList.remove("selected");
-      });
-      console.log("Todas desmarcadas:", selectedImages);
-    });
-  }
-
-  // Selecionar todas
-  const selectBtn = document.getElementById("select-all-btn");
-  if (selectBtn) {
-    selectBtn.addEventListener("click", () => {
-      const containers = document.querySelectorAll(".photo-container");
-      selectedImages = [];
-      containers.forEach(container => {
-        if (!container.classList.contains("selected")) {
-          container.classList.add("selected");
-          const img = container.querySelector("img");
-          const imageId = img.dataset.imageId || extractImageId(img.src);
-          if (imageId) {
-            selectedImages.push(imageId);
-          }
-        }
-      });
-      console.log("Selecionadas todas:", selectedImages);
-    });
-  }
-
-  // Download selecionadas
-  const downloadBtn = document.getElementById("download-selected-btn");
-  if (downloadBtn) {
-    downloadBtn.addEventListener("click", () => {
-      if (selectedImages.length === 0) {
-        alert("Nenhuma imagem selecionada!");
-        return;
-      }
-      downloadSelectedImages(selectedImages);
-    });
-  }
-});
 
 // Função auxiliar para extrair ID da imagem
 function extractImageId(url) {
@@ -355,7 +338,7 @@ function extractImageId(url) {
   return idMatch ? idMatch[1] : null;
 }
 
-// Função para baixar imagens selecionadas
+// Função para baixar imagens selecionadas (sem alterações aqui)
 async function downloadSelectedImages(selectedIds) {
   const zip = new JSZip();
   const imgFolder = zip.folder("imagens");
@@ -363,7 +346,7 @@ async function downloadSelectedImages(selectedIds) {
   for (let i = 0; i < selectedIds.length; i++) {
     const id = selectedIds[i];
     const driveUrl = `https://drive.google.com/uc?id=${id}&export=download`;
-    const proxyUrl = `https://reconhecimento-facial-kappa.vercel.app/proxy?url=${encodeURIComponent(driveUrl)}`;
+    const proxyUrl = `https://reconhecimento-facial-kappa.vercel.app/proxy?url=${encodeURIComponent(driveUrl )}`;
     
     try {
       const response = await fetch(proxyUrl);
@@ -385,26 +368,7 @@ async function downloadSelectedImages(selectedIds) {
   });
 }
 
-// Sistema de cliques otimizado
-document.addEventListener("click", (event) => {
-  // Clique no círculo de seleção
-  if (event.target.classList.contains("selection-circle")) {
-    const photoContainer = event.target.closest(".photo-container");
-    if (photoContainer) {
-      toggleSelection(photoContainer);
-    }
-    return;
-  }
-
-  // Clique na imagem para download
-  if (event.target.tagName === "IMG" && event.target.closest(".photo-container")) {
-    event.stopPropagation();
-    downloadImage(event.target);
-    return;
-  }
-});
-
-// Função para alternar seleção
+// Função para alternar seleção (sem alterações aqui)
 function toggleSelection(photoContainer) {
   photoContainer.classList.toggle("selected");
   
@@ -424,7 +388,7 @@ function toggleSelection(photoContainer) {
   console.log("Estado atual das imagens selecionadas:", selectedImages);
 }
 
-// Função para download individual
+// Função para download individual (sem alterações aqui)
 async function downloadImage(img) {
   const imageId = img.dataset.imageId || extractImageId(img.src);
   if (!imageId) {
@@ -433,11 +397,10 @@ async function downloadImage(img) {
   }
 
   const driveUrl = `https://drive.google.com/uc?id=${imageId}&export=download`;
-  const proxyUrl = `https://reconhecimento-facial-kappa.vercel.app/proxy?url=${encodeURIComponent(driveUrl)}`;
+  const proxyUrl = `https://reconhecimento-facial-kappa.vercel.app/proxy?url=${encodeURIComponent(driveUrl )}`;
 
   const container = img.closest(".photo-container");
   
-  // Aplica estado de loading
   if (container) {
     container.style.display = "flex";
     container.style.justifyContent = "center";
@@ -464,11 +427,9 @@ async function downloadImage(img) {
     a.click();
     document.body.removeChild(a);
 
-    console.log("Download concluído para a imagem:", imageId);
   } catch (error) {
     console.error("Erro durante o download:", error);
   } finally {
-    // Remove estado de loading
     if (container) {
       const loaderElem = container.querySelector(".loader");
       if (loaderElem) loaderElem.remove();
@@ -478,29 +439,94 @@ async function downloadImage(img) {
   }
 }
 
-// Inicialização
+// --- INICIALIZAÇÃO E EVENTOS ---
 document.addEventListener("DOMContentLoaded", function () {
   const albumId = new URLSearchParams(window.location.search).get("album");
 
   if (albumId) {
-    console.log("Página carregada dentro de um álbum");
+    console.log("Página carregada. Iniciando carregamento do álbum.");
     refreshAlbum(albumId);
   }
+
+  // --- EVENTO DE SCROLL PARA PAGINAÇÃO INFINITA ---
+  window.addEventListener('scroll', () => {
+    // Condições para carregar mais:
+    // 1. Não estar carregando algo no momento (isLoadingMore).
+    // 2. Ter um token para a próxima página (currentPageToken).
+    // 3. O usuário ter rolado até perto do final da página (offsetHeight - 500px).
+    if (!isLoadingMore && currentPageToken && (window.innerHeight + window.scrollY) >= document.body.offsetHeight - 500) {
+        console.log("Fim da página alcançado, carregando mais imagens...");
+        loadMoreImages(albumId);
+    }
+  });
 
   // Botão de atualizar álbum
   const updateButton = document.getElementById("updateAlbumBtn");
   if (updateButton) {
     updateButton.addEventListener("click", () => {
-      console.log("Botão 'Atualizar Álbum' clicado!");
-      refreshAlbum(albumId);
+      if (albumId) {
+        console.log("Botão 'Atualizar Álbum' clicado!");
+        refreshAlbum(albumId);
+      }
     });
   }
+  
+  // Controles de seleção
+  const deselectBtn = document.getElementById("deselect-all-btn");
+  if (deselectBtn) {
+    deselectBtn.addEventListener("click", () => {
+      document.querySelectorAll(".photo-container.selected").forEach(c => c.classList.remove("selected"));
+      selectedImages = [];
+      console.log("Todas desmarcadas:", selectedImages);
+    });
+  }
+
+  const selectBtn = document.getElementById("select-all-btn");
+  if (selectBtn) {
+    selectBtn.addEventListener("click", () => {
+      selectedImages = [];
+      document.querySelectorAll(".photo-container:not(.selected)").forEach(container => {
+        container.classList.add("selected");
+        const img = container.querySelector("img");
+        const imageId = img.dataset.imageId || extractImageId(img.src);
+        if (imageId) selectedImages.push(imageId);
+      });
+      console.log("Selecionadas todas:", selectedImages);
+    });
+  }
+
+  const downloadBtn = document.getElementById("download-selected-btn");
+  if (downloadBtn) {
+    downloadBtn.addEventListener("click", () => {
+      if (selectedImages.length === 0) {
+        alert("Nenhuma imagem selecionada!");
+        return;
+      }
+      downloadSelectedImages(selectedImages);
+    });
+  }
+  
+  // Sistema de cliques otimizado
+  document.addEventListener("click", (event) => {
+    const photoContainer = event.target.closest(".photo-container");
+    if (!photoContainer) return;
+
+    // Clique no círculo de seleção
+    if (event.target.classList.contains("selection-circle")) {
+      toggleSelection(photoContainer);
+      return;
+    }
+
+    // Clique na imagem para download
+    if (event.target.tagName === "IMG") {
+      event.stopPropagation();
+      downloadImage(event.target);
+      return;
+    }
+  });
 });
 
-// Expõe funções globalmente
+// Expõe funções globalmente para serem usadas no HTML (onclick)
 window.loadAlbums = loadAlbums;
 window.refreshAlbum = refreshAlbum;
 window.uploadSelfie = uploadSelfie;
-
-
-
