@@ -28,13 +28,20 @@ async function apiRequest(endpoint, options = {} ) {
 // Verifica se o conteúdo preenche a tela. Se não, carrega mais.
 async function checkAndLoadMore(albumId) {
     if (isLoadingMore || !currentPageToken) {
-        return;
+        return; // Sai se já estiver carregando ou se não houver mais páginas
     }
+
+    // Pega o título de reconhecimento
     const title = document.getElementById('recognition-title');
+    // Se o título estiver visível, a função para aqui e não carrega mais nada.
     if (title && title.style.display === 'block') {
         return;
     }
+
+    // Verifica se a página tem barra de rolagem vertical
     const hasScrollbar = document.body.scrollHeight > document.body.clientHeight;
+
+    // Se não houver barra de rolagem E houver mais páginas, carrega a próxima.
     if (!hasScrollbar) {
         console.log("A tela não está cheia. Carregando mais imagens automaticamente...");
         await loadMoreImages(albumId);
@@ -46,6 +53,7 @@ async function refreshAlbum(albumId) {
   const gallery = document.getElementById("image-gallery");
   if (!gallery) return;
 
+  // Esconde o título de reconhecimento ao recarregar
   const title = document.getElementById('recognition-title');
   if (title) title.style.display = 'none';
 
@@ -126,6 +134,7 @@ async function loadMoreImages(albumId) {
     if (loaderDiv) loaderDiv.remove();
     isLoadingMore = false;
     
+    // Ao final de cada carga, chama a verificação para carregar mais se necessário
     await checkAndLoadMore(albumId);
   }
 }
@@ -199,6 +208,7 @@ function displayMatchingImages(matches) {
   const gallery = document.getElementById("image-gallery");
   if (!gallery) return;
 
+  // MOSTRA O TÍTULO "Fotos Reconhecidas:"
   const title = document.getElementById('recognition-title');
   if (title) title.style.display = 'block';
 
@@ -218,36 +228,6 @@ function displayMatchingImages(matches) {
 
   gallery.appendChild(fragment);
   console.log(`displayMatchingImages: ${matches.length} imagens correspondentes exibidas.`);
-  
-  cleanupNonMatchingImages();
-}
-
-// --- NOVA FUNÇÃO DE LIMPEZA E CONFIGURAÇÃO FINAL ---
-function cleanupNonMatchingImages() {
-  console.log("Iniciando limpeza da galeria...");
-  const gallery = document.getElementById("image-gallery");
-  if (!gallery) return;
-
-  const allPhotos = gallery.querySelectorAll('.photo-container');
-  let removedCount = 0;
-
-  allPhotos.forEach(photo => {
-    if (!photo.classList.contains('match-result')) {
-      photo.remove();
-      removedCount++;
-    }
-  });
-
-  if (removedCount > 0) {
-    console.log(`${removedCount} imagem(ns) extra(s) removida(s) da visualização.`);
-  } else {
-    console.log("Nenhuma imagem extra para remover. A galeria está limpa.");
-  }
-
-  const loaderSpinner = document.getElementById('loading-more-spinner');
-  if (loaderSpinner) {
-    loaderSpinner.remove();
-  }
 }
 
 // Função auxiliar para extrair ID da imagem
@@ -363,6 +343,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // Evento de scroll
   window.addEventListener('scroll', () => {
     const title = document.getElementById('recognition-title');
+    // Bloqueia o scroll se o título de reconhecimento estiver visível
     if (title && title.style.display === 'block') {
         return;
     }
