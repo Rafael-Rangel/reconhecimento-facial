@@ -115,6 +115,7 @@ async function loadAlbums() {
 
     albumContainer.innerHTML = "";
     albumContainer.appendChild(fragment);
+    console.log(`loadAlbums: ${filteredAlbums.length} imagens de capa carregadas.`);
   } catch (error) {
     console.error("Erro ao carregar os álbuns:", error);
     albumContainer.innerHTML = `
@@ -211,6 +212,7 @@ async function loadMoreImages(albumId) {
     });
 
     gallery.appendChild(fragment);
+    console.log(`loadMoreImages: ${data.images.length} imagens carregadas.`);
     
     // Atualiza o token para a próxima requisição. Se não vier, será null.
     currentPageToken = data.next_page_token || null;
@@ -330,6 +332,7 @@ function displayMatchingImages(matches) {
   });
 
   gallery.appendChild(fragment);
+  console.log(`displayMatchingImages: ${matches.length} imagens correspondentes exibidas.`);
 }
 
 // Função auxiliar para extrair ID da imagem
