@@ -4,9 +4,6 @@ let isLoadingMore = false;
 let currentPageToken = null;
 const PAGE_SIZE = 200;
 
-// --- FLAG DE BLOQUEIO DEFINITIVA ---
-let isRecognitionRunning = false;
-
 // Função genérica para requisições à API
 async function apiRequest(endpoint, options = {} ) {
   const controller = new AbortController();
@@ -30,11 +27,13 @@ async function apiRequest(endpoint, options = {} ) {
 
 // Verifica se o conteúdo preenche a tela. Se não, carrega mais.
 async function checkAndLoadMore(albumId) {
-    // BLOQUEIA a função se o reconhecimento estiver em andamento
-    if (isRecognitionRunning || isLoadingMore || !currentPageToken) {
+    if (isLoadingMore || !currentPageToken) {
         return;
     }
-    
+    const title = document.getElementById('recognition-title');
+    if (title && title.style.display === 'block') {
+        return;
+    }
     const hasScrollbar = document.body.scrollHeight > document.body.clientHeight;
     if (!hasScrollbar) {
         console.log("A tela não está cheia. Carregando mais imagens automaticamente...");
@@ -47,8 +46,6 @@ async function refreshAlbum(albumId) {
   const gallery = document.getElementById("image-gallery");
   if (!gallery) return;
 
-  // Garante que a flag e o título sejam resetados
-  isRecognitionRunning = false;
   const title = document.getElementById('recognition-title');
   if (title) title.style.display = 'none';
 
@@ -88,31 +85,47 @@ async function loadMoreImages(albumId) {
 
   try {
     const data = await apiRequest(endpoint);
+
     if (!currentPageToken) gallery.innerHTML = ""; 
+
     if (!Array.isArray(data.images) || data.images.length === 0) {
       if (!currentPageToken) gallery.innerHTML = "<p>Nenhuma imagem disponível neste álbum.</p>";
       currentPageToken = null;
       return;
     }
+
     const fragment = document.createDocumentFragment();
     data.images.forEach(image => {
       const container = document.createElement("div");
       container.classList.add("photo-container");
       const imageUrl = image.public_url || `https://drive.google.com/thumbnail?id=${image.id}`;
-      container.innerHTML = `<img src="${imageUrl}" alt="${image.name}" class="fade-in" data-image-id="${image.id}"><div class="selection-circle"></div>`;
+      container.innerHTML = `
+        <img src="${imageUrl}" alt="${image.name}" class="fade-in" data-image-id="${image.id}">
+        <div class="selection-circle"></div>
+      `;
       fragment.appendChild(container );
     });
+
     gallery.appendChild(fragment);
+    console.log(`loadMoreImages: ${data.images.length} imagens carregadas.`);
+    
     currentPageToken = data.next_page_token || null;
+
   } catch (error) {
     console.error("Erro ao carregar as imagens:", error);
     if (!currentPageToken) {
-        gallery.innerHTML = `<div class="error-container"><p>Erro ao carregar as imagens do álbum</p><button onclick="refreshAlbum('${albumId}')" class="retry-btn">Tentar Novamente</button></div>`;
+        gallery.innerHTML = `
+          <div class="error-container">
+            <p>Erro ao carregar as imagens do álbum</p>
+            <button onclick="refreshAlbum('${albumId}')" class="retry-btn">Tentar Novamente</button>
+          </div>
+        `;
     }
   } finally {
     const loaderDiv = document.getElementById(loaderId);
     if (loaderDiv) loaderDiv.remove();
     isLoadingMore = false;
+    
     await checkAndLoadMore(albumId);
   }
 }
@@ -122,20 +135,27 @@ async function uploadSelfie(e) {
   e.preventDefault();
   
   const fileInput = document.getElementById("fileInput");
-  const file = fileInput?.files[0];
+  const cameraInput = document.getElementById("cameraInput");
+  const file = cameraInput?.files[0] || fileInput?.files[0];
+
   if (!file) {
     alert("Selecione uma imagem para enviar.");
     return;
   }
 
   const albumId = new URLSearchParams(window.location.search).get("album");
-  if (!albumId) return;
-
-  // --- PONTO CRÍTICO: ATIVA O BLOQUEIO ---
-  isRecognitionRunning = true;
+  if (!albumId) {
+    console.error("Nenhum albumId encontrado!");
+    return;
+  }
 
   const gallery = document.getElementById("image-gallery");
-  gallery.innerHTML = `<div class="loading-container"><div class="loader"></div><p>Analisando sua foto e buscando correspondências...</p></div>`;
+  gallery.innerHTML = `
+    <div class="loading-container">
+      <div class="loader"></div>
+      <p class="loading-message">Analisando sua foto e buscando correspondências...</p>
+    </div>
+  `;
   
   const title = document.getElementById('recognition-title');
   if (title) title.style.display = 'none';
@@ -143,20 +163,34 @@ async function uploadSelfie(e) {
   try {
     const formData = new FormData();
     formData.append("file", file);
-    const data = await apiRequest(`/albums/${albumId}/upload-selfie?threshold=85&max_faces=20`, { method: "POST", body: formData });
+
+    const data = await apiRequest(`/albums/${albumId}/upload-selfie?threshold=85&max_faces=20`, {
+      method: "POST",
+      body: formData,
+    });
 
     if (!data.matches || data.matches.length === 0) {
-      gallery.innerHTML = `<div class="no-matches"><p>Nenhuma correspondência encontrada.</p><p>Tente com uma foto mais clara do seu rosto.</p><button onclick="refreshAlbum('${albumId}')" class="retry-btn">Ver todas as fotos do álbum</button></div>`;
-    } else {
-      gallery.innerHTML = "";
-      displayMatchingImages(data.matches);
+      gallery.innerHTML = `
+        <div class="no-matches">
+          <p>Nenhuma correspondência encontrada.</p>
+          <p>Tente com uma foto mais clara do seu rosto.</p>
+          <button onclick="refreshAlbum('${albumId}')" class="retry-btn">Ver todas as fotos do álbum</button>
+        </div>
+      `;
+      return;
     }
+
+    gallery.innerHTML = "";
+    displayMatchingImages(data.matches);
   } catch (error) {
     console.error("Erro ao processar sua imagem:", error);
-    gallery.innerHTML = `<div class="error-container"><p>Erro ao processar sua imagem.</p><p>Verifique se o álbum foi indexado ou tente novamente.</p><button onclick="refreshAlbum('${albumId}')" class="retry-btn">Ver todas as fotos</button></div>`;
-  } finally {
-    // --- PONTO CRÍTICO: DESATIVA O BLOQUEIO ---
-    isRecognitionRunning = false;
+    gallery.innerHTML = `
+      <div class="error-container">
+        <p>Erro ao processar sua imagem.</p>
+        <p>Verifique se o álbum foi indexado ou tente novamente.</p>
+        <button onclick="refreshAlbum('${albumId}')" class="retry-btn">Ver todas as fotos</button>
+      </div>
+    `;
   }
 }
 
@@ -164,56 +198,74 @@ async function uploadSelfie(e) {
 function displayMatchingImages(matches) {
   const gallery = document.getElementById("image-gallery");
   if (!gallery) return;
+
   const title = document.getElementById('recognition-title');
   if (title) title.style.display = 'block';
+
   const fragment = document.createDocumentFragment();
   matches.forEach((match, index) => {
     const container = document.createElement("div");
     container.classList.add("photo-container", "match-result");
     const confidence = match.confidence ? `${Math.round(match.confidence)}%` : '';
     const imageUrl = match.public_url || `https://drive.google.com/thumbnail?id=${match.image_id}`;
-    container.innerHTML = `<img src="${imageUrl}" alt="Foto encontrada ${index + 1}" class="fade-in" data-image-id="${match.image_id}"><div class="selection-circle"></div>${confidence ? `<div class="confidence-badge">${confidence}</div>` : ''}`;
+    container.innerHTML = `
+      <img src="${imageUrl}" alt="Foto encontrada ${index + 1}" class="fade-in" data-image-id="${match.image_id}">
+      <div class="selection-circle"></div>
+      ${confidence ? `<div class="confidence-badge">${confidence}</div>` : ''}
+    `;
     fragment.appendChild(container );
   });
+
   gallery.appendChild(fragment);
+  console.log(`displayMatchingImages: ${matches.length} imagens correspondentes exibidas.`);
+  
+  cleanupNonMatchingImages();
 }
 
-// --- INICIALIZAÇÃO E EVENTOS ---
-document.addEventListener("DOMContentLoaded", function () {
-  const albumId = new URLSearchParams(window.location.search).get("album");
-  if (albumId) {
-    refreshAlbum(albumId);
-  }
+// --- NOVA FUNÇÃO DE LIMPEZA E CONFIGURAÇÃO FINAL ---
+function cleanupNonMatchingImages() {
+  console.log("Iniciando limpeza da galeria...");
+  const gallery = document.getElementById("image-gallery");
+  if (!gallery) return;
 
-  // Evento de scroll
-  window.addEventListener('scroll', () => {
-    // BLOQUEIA a função se o reconhecimento estiver em andamento
-    if (isRecognitionRunning || isLoadingMore || !currentPageToken) {
-        return;
-    }
-    if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 500) {
-        console.log("Fim da página alcançado, carregando mais imagens...");
-        loadMoreImages(albumId);
+  const allPhotos = gallery.querySelectorAll('.photo-container');
+  let removedCount = 0;
+
+  allPhotos.forEach(photo => {
+    if (!photo.classList.contains('match-result')) {
+      photo.remove();
+      removedCount++;
     }
   });
-  
-  // (O resto do código, com as funções de seleção, download, etc., permanece igual)
-  // ...
-});
 
-// (As funções de utilidade como downloadSelectedImages, toggleSelection, etc. não precisam de alteração)
-// ... cole o resto do seu script aqui ...
+  if (removedCount > 0) {
+    console.log(`${removedCount} imagem(ns) extra(s) removida(s) da visualização.`);
+  } else {
+    console.log("Nenhuma imagem extra para remover. A galeria está limpa.");
+  }
+
+  const loaderSpinner = document.getElementById('loading-more-spinner');
+  if (loaderSpinner) {
+    loaderSpinner.remove();
+  }
+}
+
+// Função auxiliar para extrair ID da imagem
 function extractImageId(url) {
   const idMatch = url.match(/id=([^&]+)/);
   return idMatch ? idMatch[1] : null;
 }
+
+// Função para baixar imagens selecionadas
 async function downloadSelectedImages(selectedIds) {
   const zip = new JSZip();
   const imgFolder = zip.folder("imagens");
+
   for (let i = 0; i < selectedIds.length; i++) {
     const id = selectedIds[i];
     const driveUrl = `https://drive.google.com/uc?id=${id}&export=download`;
     const proxyUrl = `https://reconhecimento-facial-kappa.vercel.app/proxy?url=${encodeURIComponent(driveUrl )}`;
+    
     try {
       const response = await fetch(proxyUrl);
       const blob = await response.blob();
@@ -223,6 +275,7 @@ async function downloadSelectedImages(selectedIds) {
       console.error("Erro ao baixar a imagem:", driveUrl, error);
     }
   }
+
   zip.generateAsync({ type: "blob" }).then(function(content) {
     const a = document.createElement("a");
     a.href = URL.createObjectURL(content);
@@ -232,10 +285,14 @@ async function downloadSelectedImages(selectedIds) {
     document.body.removeChild(a);
   });
 }
+
+// Função para alternar seleção
 function toggleSelection(photoContainer) {
   photoContainer.classList.toggle("selected");
+  
   const img = photoContainer.querySelector("img");
   const imageId = img.dataset.imageId || extractImageId(img.src);
+
   if (imageId) {
     if (photoContainer.classList.contains("selected")) {
       if (!selectedImages.includes(imageId)) {
@@ -246,16 +303,22 @@ function toggleSelection(photoContainer) {
     }
   }
 }
+
+// Função para download individual
 async function downloadImage(img) {
   const imageId = img.dataset.imageId || extractImageId(img.src);
   if (!imageId) return;
+
   const driveUrl = `https://drive.google.com/uc?id=${imageId}&export=download`;
   const proxyUrl = `https://reconhecimento-facial-kappa.vercel.app/proxy?url=${encodeURIComponent(driveUrl )}`;
+
   const container = img.closest(".photo-container");
+  
   if (container) {
     container.style.display = "flex";
     container.style.justifyContent = "center";
     container.style.alignItems = "center";
+
     if (!container.querySelector(".loader")) {
       const loader = document.createElement("div");
       loader.className = "loader";
@@ -264,16 +327,19 @@ async function downloadImage(img) {
     }
     img.style.filter = "brightness(61%)";
   }
+
   try {
     const response = await fetch(proxyUrl);
     if (!response.ok) throw new Error("Erro no download!");
     const blob = await response.blob();
+
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = img.alt || "imagem.jpg";
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+
   } catch (error) {
     console.error("Erro durante o download:", error);
   } finally {
@@ -285,48 +351,78 @@ async function downloadImage(img) {
     img.removeAttribute("style");
   }
 }
-document.addEventListener("click", (event) => {
+
+// --- INICIALIZAÇÃO E EVENTOS ---
+document.addEventListener("DOMContentLoaded", function () {
+  const albumId = new URLSearchParams(window.location.search).get("album");
+
+  if (albumId) {
+    refreshAlbum(albumId);
+  }
+
+  // Evento de scroll
+  window.addEventListener('scroll', () => {
+    const title = document.getElementById('recognition-title');
+    if (title && title.style.display === 'block') {
+        return;
+    }
+
+    if (!isLoadingMore && currentPageToken && (window.innerHeight + window.scrollY) >= document.body.offsetHeight - 500) {
+        console.log("Fim da página alcançado, carregando mais imagens...");
+        loadMoreImages(albumId);
+    }
+  });
+
+  // Eventos de clique para seleção e download
+  document.addEventListener("click", (event) => {
     const photoContainer = event.target.closest(".photo-container");
     if (!photoContainer) return;
+
     if (event.target.classList.contains("selection-circle")) {
       toggleSelection(photoContainer);
       return;
     }
+
     if (event.target.tagName === "IMG") {
       event.stopPropagation();
       downloadImage(event.target);
       return;
     }
-});
-const deselectBtn = document.getElementById("deselect-all-btn");
-if (deselectBtn) {
+  });
+
+  // Botões de controle de seleção
+  const deselectBtn = document.getElementById("deselect-all-btn");
+  if (deselectBtn) {
     deselectBtn.addEventListener("click", () => {
-        document.querySelectorAll(".photo-container.selected").forEach(c => c.classList.remove("selected"));
-        selectedImages = [];
+      document.querySelectorAll(".photo-container.selected").forEach(c => c.classList.remove("selected"));
+      selectedImages = [];
     });
-}
-const selectBtn = document.getElementById("select-all-btn");
-if (selectBtn) {
+  }
+
+  const selectBtn = document.getElementById("select-all-btn");
+  if (selectBtn) {
     selectBtn.addEventListener("click", () => {
-        selectedImages = [];
-        document.querySelectorAll(".photo-container:not(.selected)").forEach(container => {
-            container.classList.add("selected");
-            const img = container.querySelector("img");
-            const imageId = img.dataset.imageId || extractImageId(img.src);
-            if (imageId) selectedImages.push(imageId);
-        });
+      selectedImages = [];
+      document.querySelectorAll(".photo-container:not(.selected)").forEach(container => {
+        container.classList.add("selected");
+        const img = container.querySelector("img");
+        const imageId = img.dataset.imageId || extractImageId(img.src);
+        if (imageId) selectedImages.push(imageId);
+      });
     });
-}
-const downloadBtn = document.getElementById("download-selected-btn");
-if (downloadBtn) {
+  }
+
+  const downloadBtn = document.getElementById("download-selected-btn");
+  if (downloadBtn) {
     downloadBtn.addEventListener("click", () => {
-        if (selectedImages.length === 0) {
-            alert("Nenhuma imagem selecionada!");
-            return;
-        }
-        downloadSelectedImages(selectedImages);
+      if (selectedImages.length === 0) {
+        alert("Nenhuma imagem selecionada!");
+        return;
+      }
+      downloadSelectedImages(selectedImages);
     });
-}
+  }
+});
 
 // Expõe funções globalmente para serem usadas no HTML (onclick)
 window.refreshAlbum = refreshAlbum;
