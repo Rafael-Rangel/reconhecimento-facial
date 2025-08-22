@@ -201,11 +201,96 @@ function displayMatchingImages(matches) {
   gallery.appendChild(fragment);
 }
 
-// (O restante do código: extractImageId, downloadSelectedImages, toggleSelection, downloadImage... permanece exatamente igual)
-function extractImageId(url) { /* ...código original... */ }
-async function downloadSelectedImages(selectedIds) { /* ...código original... */ }
-function toggleSelection(photoContainer) { /* ...código original... */ }
-async function downloadImage(img) { /* ...código original... */ }
+// Função auxiliar para extrair ID da imagem
+function extractImageId(url) {
+  const idMatch = url.match(/id=([^&]+)/);
+  return idMatch ? idMatch[1] : null;
+}
+
+// Função para baixar imagens selecionadas
+async function downloadSelectedImages(selectedIds) {
+  const zip = new JSZip();
+  const imgFolder = zip.folder("imagens");
+  for (let i = 0; i < selectedIds.length; i++) {
+    const id = selectedIds[i];
+    const driveUrl = `https://drive.google.com/uc?id=${id}&export=download`;
+    const proxyUrl = `https://reconhecimento-facial-kappa.vercel.app/proxy?url=${encodeURIComponent(driveUrl )}`;
+    try {
+      const response = await fetch(proxyUrl);
+      const blob = await response.blob();
+      const fileName = `imagem_${i + 1}.jpg`;
+      imgFolder.file(fileName, blob);
+    } catch (error) {
+      console.error("Erro ao baixar a imagem:", driveUrl, error);
+    }
+  }
+  zip.generateAsync({ type: "blob" }).then(function(content) {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(content);
+    a.download = "imagens.zip";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  });
+}
+
+// Função para alternar seleção
+function toggleSelection(photoContainer) {
+  photoContainer.classList.toggle("selected");
+  const img = photoContainer.querySelector("img");
+  const imageId = img.dataset.imageId || extractImageId(img.src);
+  if (imageId) {
+    if (photoContainer.classList.contains("selected")) {
+      if (!selectedImages.includes(imageId)) {
+        selectedImages.push(imageId);
+      }
+    } else {
+      selectedImages = selectedImages.filter(id => id !== imageId);
+    }
+  }
+  console.log("Estado atual das imagens selecionadas:", selectedImages);
+}
+
+// Função para download individual
+async function downloadImage(img) {
+  const imageId = img.dataset.imageId || extractImageId(img.src);
+  if (!imageId) return;
+  const driveUrl = `https://drive.google.com/uc?id=${imageId}&export=download`;
+  const proxyUrl = `https://reconhecimento-facial-kappa.vercel.app/proxy?url=${encodeURIComponent(driveUrl )}`;
+  const container = img.closest(".photo-container");
+  if (container) {
+    container.style.display = "flex";
+    container.style.justifyContent = "center";
+    container.style.alignItems = "center";
+    if (!container.querySelector(".loader")) {
+      const loader = document.createElement("div");
+      loader.className = "loader";
+      loader.style.cssText = "position: absolute; z-index: 9;";
+      container.insertBefore(loader, container.firstChild);
+    }
+    img.style.filter = "brightness(61%)";
+  }
+  try {
+    const response = await fetch(proxyUrl);
+    if (!response.ok) throw new Error("Erro no download!");
+    const blob = await response.blob();
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = img.alt || "imagem.jpg";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  } catch (error) {
+    console.error("Erro durante o download:", error);
+  } finally {
+    if (container) {
+      const loaderElem = container.querySelector(".loader");
+      if (loaderElem) loaderElem.remove();
+      container.removeAttribute("style");
+    }
+    img.removeAttribute("style");
+  }
+}
 
 // --- INICIALIZAÇÃO E EVENTOS ---
 document.addEventListener("DOMContentLoaded", function () {
@@ -229,12 +314,65 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  // (O restante do código de listeners de clique e botões permanece exatamente igual)
-  const updateButton = document.getElementById("updateAlbumBtn"); /* ... */
-  const deselectBtn = document.getElementById("deselect-all-btn"); /* ... */
-  const selectBtn = document.getElementById("select-all-btn"); /* ... */
-  const downloadBtn = document.getElementById("download-selected-btn"); /* ... */
-  document.addEventListener("click", (event) => { /* ... */ });
+  // Botão de atualizar álbum
+  const updateButton = document.getElementById("updateAlbumBtn");
+  if (updateButton) {
+    updateButton.addEventListener("click", () => {
+      if (albumId) {
+        refreshAlbum(albumId);
+      }
+    });
+  }
+  
+  // Controles de seleção
+  const deselectBtn = document.getElementById("deselect-all-btn");
+  if (deselectBtn) {
+    deselectBtn.addEventListener("click", () => {
+      document.querySelectorAll(".photo-container.selected").forEach(c => c.classList.remove("selected"));
+      selectedImages = [];
+      console.log("Todas desmarcadas:", selectedImages);
+    });
+  }
+
+  const selectBtn = document.getElementById("select-all-btn");
+  if (selectBtn) {
+    selectBtn.addEventListener("click", () => {
+      selectedImages = [];
+      document.querySelectorAll(".photo-container:not(.selected)").forEach(container => {
+        container.classList.add("selected");
+        const img = container.querySelector("img");
+        const imageId = img.dataset.imageId || extractImageId(img.src);
+        if (imageId) selectedImages.push(imageId);
+      });
+      console.log("Selecionadas todas:", selectedImages);
+    });
+  }
+
+  const downloadBtn = document.getElementById("download-selected-btn");
+  if (downloadBtn) {
+    downloadBtn.addEventListener("click", () => {
+      if (selectedImages.length === 0) {
+        alert("Nenhuma imagem selecionada!");
+        return;
+      }
+      downloadSelectedImages(selectedImages);
+    });
+  }
+  
+  // Sistema de cliques otimizado
+  document.addEventListener("click", (event) => {
+    const photoContainer = event.target.closest(".photo-container");
+    if (!photoContainer) return;
+    if (event.target.classList.contains("selection-circle")) {
+      toggleSelection(photoContainer);
+      return;
+    }
+    if (event.target.tagName === "IMG") {
+      event.stopPropagation();
+      downloadImage(event.target);
+      return;
+    }
+  });
 });
 
 // Expõe funções globalmente para serem usadas no HTML
