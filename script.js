@@ -1,51 +1,116 @@
 const API_URL = "https://dev.uvfotoevideo.com.br/api";
 let selectedImages = [];
-let isLoadingMore = false;
+let imageMap = {};
+let isProcessing = false;
+let isLoadingAlbums = false;
+
+// --- VARIÁVEIS DE PAGINAÇÃO ---
 let currentPageToken = null;
+let isLoadingMore = false;
 const PAGE_SIZE = 200;
 
-// Função genérica para requisições à API
+// --- FLAG DE BLOQUEIO PARA RECONHECIMENTO FACIAL ---
+let isRecognitionRunning = false;
+
+// Função genérica para requisições à API com melhor tratamento de erros
 async function apiRequest(endpoint, options = {} ) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30000);
 
   try {
-    const response = await fetch(`${API_URL}${endpoint}`, { ...options, signal: controller.signal });
+    const response = await fetch(`${API_URL}${endpoint}`, {
+      ...options,
+      signal: controller.signal
+    });
+    
     clearTimeout(timeoutId);
+    
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(`API Error: ${response.status} - ${errorData.message || response.statusText}`);
     }
+    
     return await response.json();
   } catch (error) {
     clearTimeout(timeoutId);
-    if (error.name === 'AbortError') throw new Error('Requisição cancelada por timeout');
+    if (error.name === 'AbortError') {
+      throw new Error('Requisição cancelada por timeout');
+    }
     console.error(`Erro na requisição para ${endpoint}:`, error);
     throw error;
   }
 }
 
-// Verifica se o conteúdo preenche a tela. Se não, carrega mais.
-async function checkAndLoadMore(albumId) {
-    if (isLoadingMore || !currentPageToken) {
-        return; // Sai se já estiver carregando ou se não houver mais páginas
+// Debounce para evitar múltiplas chamadas simultâneas
+function debounce(func, delay) {
+  let timeout;
+  return (...args) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), delay);
+  };
+}
+
+// Carrega álbuns com otimização e define as capas (FUNÇÃO ORIGINAL MANTIDA)
+async function loadAlbums() {
+  if (isLoadingAlbums) return;
+  isLoadingAlbums = true;
+
+  const albumContainer = document.getElementById("album-container");
+  if (!albumContainer) {
+    console.error("Elemento 'album-container' não encontrado no DOM.");
+    return;
+  }
+
+  albumContainer.innerHTML = `<div class="loading-container"><div class="loader"></div><p class="loading-message">Carregando álbuns...</p></div>`;
+
+  try {
+    const data = await apiRequest("/main/folders");
+    if (!Array.isArray(data.folders) || data.folders.length === 0) {
+      albumContainer.innerHTML = "<p>Nenhum álbum disponível.</p>";
+      return;
     }
 
-    // Pega o título de reconhecimento
-    const title = document.getElementById('recognition-title');
-    // Se o título estiver visível, a função para aqui e não carrega mais nada.
-    if (title && title.style.display === 'block') {
-        return;
+    const filteredAlbums = data.folders.filter(album => 
+      album.name.trim().toLowerCase() !== "fotoscapas"
+    );
+
+    let fotosCapas = [];
+    try {
+      const capasData = await apiRequest("/albums/1w3_3QJ0AMf-K6wqNHJPw4d5aWDekHTvN/images");
+      fotosCapas = capasData.images || [];
+    } catch (error) {
+      console.error("Erro ao carregar imagens de capa:", error);
     }
 
-    // Verifica se a página tem barra de rolagem vertical
-    const hasScrollbar = document.body.scrollHeight > document.body.clientHeight;
+    const fragment = document.createDocumentFragment();
+    filteredAlbums.forEach(album => {
+      const albumCard = document.createElement("div");
+      albumCard.classList.add("album-card");
 
-    // Se não houver barra de rolagem E houver mais páginas, carrega a próxima.
-    if (!hasScrollbar) {
-        console.log("A tela não está cheia. Carregando mais imagens automaticamente...");
-        await loadMoreImages(albumId);
-    }
+      const fotoCapa = fotosCapas.find(img => {
+        const lowerAlbumName = album.name.trim().toLowerCase();
+        const lowerImageName = img.name.trim().toLowerCase().replace(/\.(jpg|jpeg|png)$/, "");
+        return lowerAlbumName === lowerImageName;
+      });
+
+      const capaUrl = fotoCapa ? (fotoCapa.public_url || `https://drive.google.com/thumbnail?id=${fotoCapa.id}` ) : "https://placehold.co/300x200?text=Sem+Capa";
+
+      albumCard.innerHTML = `
+        <img src="${capaUrl}" alt="Capa do Álbum" style="border-radius: 5px; width: 100%; height: 200px; object-fit: cover; transition: transform 0.3s;">
+        <h3>${album.name}</h3>
+      `;
+      albumCard.onclick = ( ) => window.location.href = `album.html?album=${album.id}`;
+      fragment.appendChild(albumCard);
+    });
+
+    albumContainer.innerHTML = "";
+    albumContainer.appendChild(fragment);
+  } catch (error) {
+    console.error("Erro ao carregar os álbuns:", error);
+    albumContainer.innerHTML = `<div class="error-container"><p>Erro ao carregar os álbuns</p><button onclick="loadAlbums()" class="retry-btn">Tentar Novamente</button></div>`;
+  } finally {
+    isLoadingAlbums = false;
+  }
 }
 
 // Limpa a galeria e inicia o carregamento da primeira página.
@@ -53,26 +118,21 @@ async function refreshAlbum(albumId) {
   const gallery = document.getElementById("image-gallery");
   if (!gallery) return;
 
-  // Esconde o título de reconhecimento ao recarregar
-  const title = document.getElementById('recognition-title');
-  if (title) title.style.display = 'none';
+  // Garante que a flag de bloqueio seja desativada ao recarregar o álbum
+  isRecognitionRunning = false;
 
   currentPageToken = null;
   isLoadingMore = false; 
   
-  gallery.innerHTML = `
-    <div class="loading-container">
-      <div class="loader"></div>
-      <p class="loading-message">Carregando suas fotos...</p>
-    </div>
-  `;
+  gallery.innerHTML = `<div class="loading-container"><div class="loader"></div><p class="loading-message">Carregando suas fotos...</p></div>`;
 
   await loadMoreImages(albumId);
 }
 
 // Carrega uma página de imagens
 async function loadMoreImages(albumId) {
-  if (isLoadingMore) return;
+  // Adiciona verificação da flag de bloqueio
+  if (isLoadingMore || isRecognitionRunning) return;
   isLoadingMore = true;
 
   const gallery = document.getElementById("image-gallery");
@@ -94,10 +154,14 @@ async function loadMoreImages(albumId) {
   try {
     const data = await apiRequest(endpoint);
 
-    if (!currentPageToken) gallery.innerHTML = ""; 
+    if (!currentPageToken) {
+      gallery.innerHTML = ""; 
+    }
 
     if (!Array.isArray(data.images) || data.images.length === 0) {
-      if (!currentPageToken) gallery.innerHTML = "<p>Nenhuma imagem disponível neste álbum.</p>";
+      if (!currentPageToken) {
+        gallery.innerHTML = "<p>Nenhuma imagem disponível neste álbum.</p>";
+      }
       currentPageToken = null;
       return;
     }
@@ -107,39 +171,25 @@ async function loadMoreImages(albumId) {
       const container = document.createElement("div");
       container.classList.add("photo-container");
       const imageUrl = image.public_url || `https://drive.google.com/thumbnail?id=${image.id}`;
-      container.innerHTML = `
-        <img src="${imageUrl}" alt="${image.name}" class="fade-in" data-image-id="${image.id}">
-        <div class="selection-circle"></div>
-      `;
+      container.innerHTML = `<img src="${imageUrl}" alt="${image.name}" class="fade-in" data-image-id="${image.id}"><div class="selection-circle"></div>`;
       fragment.appendChild(container );
     });
 
     gallery.appendChild(fragment);
-    console.log(`loadMoreImages: ${data.images.length} imagens carregadas.`);
-    
     currentPageToken = data.next_page_token || null;
-
   } catch (error) {
     console.error("Erro ao carregar as imagens:", error);
     if (!currentPageToken) {
-        gallery.innerHTML = `
-          <div class="error-container">
-            <p>Erro ao carregar as imagens do álbum</p>
-            <button onclick="refreshAlbum('${albumId}')" class="retry-btn">Tentar Novamente</button>
-          </div>
-        `;
+        gallery.innerHTML = `<div class="error-container"><p>Erro ao carregar as imagens do álbum</p><button onclick="refreshAlbum('${albumId}')" class="retry-btn">Tentar Novamente</button></div>`;
     }
   } finally {
     const loaderDiv = document.getElementById(loaderId);
     if (loaderDiv) loaderDiv.remove();
     isLoadingMore = false;
-    
-    // Ao final de cada carga, chama a verificação para carregar mais se necessário
-    await checkAndLoadMore(albumId);
   }
 }
 
-// Função de reconhecimento facial
+// Função de reconhecimento facial com controle de bloqueio
 async function uploadSelfie(e) {
   e.preventDefault();
   
@@ -158,59 +208,36 @@ async function uploadSelfie(e) {
     return;
   }
 
+  // --- PONTO CRÍTICO: ATIVA O BLOQUEIO ---
+  isRecognitionRunning = true;
+
   const gallery = document.getElementById("image-gallery");
-  gallery.innerHTML = `
-    <div class="loading-container">
-      <div class="loader"></div>
-      <p class="loading-message">Analisando sua foto e buscando correspondências...</p>
-    </div>
-  `;
-  
-  const title = document.getElementById('recognition-title');
-  if (title) title.style.display = 'none';
+  gallery.innerHTML = `<div class="loading-container"><div class="loader"></div><p class="loading-message">Analisando sua foto e buscando correspondências...</p></div>`;
 
   try {
     const formData = new FormData();
     formData.append("file", file);
-
-    const data = await apiRequest(`/albums/${albumId}/upload-selfie?threshold=85&max_faces=20`, {
-      method: "POST",
-      body: formData,
-    });
+    const data = await apiRequest(`/albums/${albumId}/upload-selfie?threshold=85&max_faces=20`, { method: "POST", body: formData });
 
     if (!data.matches || data.matches.length === 0) {
-      gallery.innerHTML = `
-        <div class="no-matches">
-          <p>Nenhuma correspondência encontrada.</p>
-          <p>Tente com uma foto mais clara do seu rosto.</p>
-          <button onclick="refreshAlbum('${albumId}')" class="retry-btn">Ver todas as fotos do álbum</button>
-        </div>
-      `;
-      return;
+      gallery.innerHTML = `<div class="no-matches"><p>Nenhuma correspondência encontrada</p><p>Tente com uma foto mais clara do seu rosto</p><button onclick="refreshAlbum('${albumId}')" style="border-color: #E01F34;box-shadow: 0 1px 3px 0 rgba(0, 0, 0, .13);cursor: pointer;margin-top: 5px;" class="retry-btn">Ver todas as fotos do álbum</button></div>`;
+    } else {
+      gallery.innerHTML = "";
+      displayMatchingImages(data.matches);
     }
-
-    gallery.innerHTML = "";
-    displayMatchingImages(data.matches);
   } catch (error) {
     console.error("Erro ao processar sua imagem:", error);
-    gallery.innerHTML = `
-      <div class="error-container">
-        <p>Erro ao processar sua imagem.</p>
-        <p>Verifique se o álbum foi indexado ou tente novamente.</p>
-        <button onclick="refreshAlbum('${albumId}')" class="retry-btn">Ver todas as fotos</button>
-      </div>
-    `;
+    gallery.innerHTML = `<div class="error-container"><p>Erro ao processar sua imagem</p><p>Verifique se o álbum foi indexado ou tente novamente</p><button onclick="refreshAlbum('${albumId}')" class="retry-btn">Ver todas as fotos</button></div>`;
+  } finally {
+    // --- PONTO CRÍTICO: DESATIVA O BLOQUEIO ---
+    isRecognitionRunning = false;
   }
 }
 
-// Exibe os resultados do reconhecimento facial
+// Exibe correspondências com confidence
 function displayMatchingImages(matches) {
   const gallery = document.getElementById("image-gallery");
   if (!gallery) return;
-
-  // MOSTRA O TÍTULO "Fotos Reconhecidas:"
-  const title = document.getElementById('recognition-title');
-  if (title) title.style.display = 'block';
 
   const fragment = document.createDocumentFragment();
   matches.forEach((match, index) => {
@@ -218,16 +245,10 @@ function displayMatchingImages(matches) {
     container.classList.add("photo-container", "match-result");
     const confidence = match.confidence ? `${Math.round(match.confidence)}%` : '';
     const imageUrl = match.public_url || `https://drive.google.com/thumbnail?id=${match.image_id}`;
-    container.innerHTML = `
-      <img src="${imageUrl}" alt="Foto encontrada ${index + 1}" class="fade-in" data-image-id="${match.image_id}">
-      <div class="selection-circle"></div>
-      ${confidence ? `<div class="confidence-badge">${confidence}</div>` : ''}
-    `;
+    container.innerHTML = `<img src="${imageUrl}" alt="Foto encontrada ${index + 1}" class="fade-in" data-image-id="${match.image_id}"><div class="selection-circle"></div>${confidence ? `<div class="confidence-badge">${confidence}</div>` : ''}`;
     fragment.appendChild(container );
   });
-
   gallery.appendChild(fragment);
-  console.log(`displayMatchingImages: ${matches.length} imagens correspondentes exibidas.`);
 }
 
 // Função auxiliar para extrair ID da imagem
@@ -240,12 +261,10 @@ function extractImageId(url) {
 async function downloadSelectedImages(selectedIds) {
   const zip = new JSZip();
   const imgFolder = zip.folder("imagens");
-
   for (let i = 0; i < selectedIds.length; i++) {
     const id = selectedIds[i];
     const driveUrl = `https://drive.google.com/uc?id=${id}&export=download`;
     const proxyUrl = `https://reconhecimento-facial-kappa.vercel.app/proxy?url=${encodeURIComponent(driveUrl )}`;
-    
     try {
       const response = await fetch(proxyUrl);
       const blob = await response.blob();
@@ -255,7 +274,6 @@ async function downloadSelectedImages(selectedIds) {
       console.error("Erro ao baixar a imagem:", driveUrl, error);
     }
   }
-
   zip.generateAsync({ type: "blob" }).then(function(content) {
     const a = document.createElement("a");
     a.href = URL.createObjectURL(content);
@@ -269,10 +287,8 @@ async function downloadSelectedImages(selectedIds) {
 // Função para alternar seleção
 function toggleSelection(photoContainer) {
   photoContainer.classList.toggle("selected");
-  
   const img = photoContainer.querySelector("img");
   const imageId = img.dataset.imageId || extractImageId(img.src);
-
   if (imageId) {
     if (photoContainer.classList.contains("selected")) {
       if (!selectedImages.includes(imageId)) {
@@ -288,17 +304,13 @@ function toggleSelection(photoContainer) {
 async function downloadImage(img) {
   const imageId = img.dataset.imageId || extractImageId(img.src);
   if (!imageId) return;
-
   const driveUrl = `https://drive.google.com/uc?id=${imageId}&export=download`;
   const proxyUrl = `https://reconhecimento-facial-kappa.vercel.app/proxy?url=${encodeURIComponent(driveUrl )}`;
-
   const container = img.closest(".photo-container");
-  
   if (container) {
     container.style.display = "flex";
     container.style.justifyContent = "center";
     container.style.alignItems = "center";
-
     if (!container.querySelector(".loader")) {
       const loader = document.createElement("div");
       loader.className = "loader";
@@ -307,19 +319,16 @@ async function downloadImage(img) {
     }
     img.style.filter = "brightness(61%)";
   }
-
   try {
     const response = await fetch(proxyUrl);
     if (!response.ok) throw new Error("Erro no download!");
     const blob = await response.blob();
-
     const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
+a.href = URL.createObjectURL(blob);
     a.download = img.alt || "imagem.jpg";
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-
   } catch (error) {
     console.error("Erro durante o download:", error);
   } finally {
@@ -338,40 +347,34 @@ document.addEventListener("DOMContentLoaded", function () {
 
   if (albumId) {
     refreshAlbum(albumId);
+  } else {
+    // Se não estiver em um álbum, carrega a lista de álbuns
+    loadAlbums();
   }
 
-  // Evento de scroll
+  // Evento de scroll com bloqueio
   window.addEventListener('scroll', () => {
-    const title = document.getElementById('recognition-title');
-    // Bloqueia o scroll se o título de reconhecimento estiver visível
-    if (title && title.style.display === 'block') {
+    // BLOQUEIA a função se o reconhecimento estiver em andamento
+    if (isRecognitionRunning || isLoadingMore || !currentPageToken) {
         return;
     }
-
-    if (!isLoadingMore && currentPageToken && (window.innerHeight + window.scrollY) >= document.body.offsetHeight - 500) {
+    if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 500) {
         console.log("Fim da página alcançado, carregando mais imagens...");
         loadMoreImages(albumId);
     }
   });
 
-  // Eventos de clique para seleção e download
-  document.addEventListener("click", (event) => {
-    const photoContainer = event.target.closest(".photo-container");
-    if (!photoContainer) return;
-
-    if (event.target.classList.contains("selection-circle")) {
-      toggleSelection(photoContainer);
-      return;
-    }
-
-    if (event.target.tagName === "IMG") {
-      event.stopPropagation();
-      downloadImage(event.target);
-      return;
-    }
-  });
-
-  // Botões de controle de seleção
+  // Botão de atualizar álbum
+  const updateButton = document.getElementById("updateAlbumBtn");
+  if (updateButton) {
+    updateButton.addEventListener("click", () => {
+      if (albumId) {
+        refreshAlbum(albumId);
+      }
+    });
+  }
+  
+  // Controles de seleção
   const deselectBtn = document.getElementById("deselect-all-btn");
   if (deselectBtn) {
     deselectBtn.addEventListener("click", () => {
@@ -403,8 +406,24 @@ document.addEventListener("DOMContentLoaded", function () {
       downloadSelectedImages(selectedImages);
     });
   }
+  
+  // Sistema de cliques otimizado
+  document.addEventListener("click", (event) => {
+    const photoContainer = event.target.closest(".photo-container");
+    if (!photoContainer) return;
+    if (event.target.classList.contains("selection-circle")) {
+      toggleSelection(photoContainer);
+      return;
+    }
+    if (event.target.tagName === "IMG") {
+      event.stopPropagation();
+      downloadImage(event.target);
+      return;
+    }
+  });
 });
 
 // Expõe funções globalmente para serem usadas no HTML (onclick)
+window.loadAlbums = loadAlbums;
 window.refreshAlbum = refreshAlbum;
 window.uploadSelfie = uploadSelfie;
